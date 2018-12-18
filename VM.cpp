@@ -3,7 +3,7 @@
 
 #define banks 16
 #define bank_size 4096
-#define steps 100
+#define steps 10
 #define DEBUG true
 using namespace std;
 
@@ -13,7 +13,7 @@ class VM
 	uint8_t mem[banks][bank_size];
 
 	// Registradores
-	int _acc;
+	int16_t _acc;
 	uint16_t _cb;
 	uint16_t _ri, _ci;
 
@@ -29,20 +29,7 @@ public:
 		for (int i = 0; i < banks; i++)
 			for (int j = 0; j < bank_size; j++)
 				mem[i][j] = 0;	
-		mem[0][0] = 0x32;
-		mem[0][1] = 0x0a;
-		mem[0][2] = 0xbc;
-		mem[0][3] = 0x00;
-		mem[0][4] = 0x0a;
-		mem[0][0xa] = 0x30;
-		mem[0][0xabc] = 0xfd;
-		mem[0][0xabd] = 0xef;
-		mem[0xf][0xdef] = 0x32;
-		mem[0xf][0xdf0] = 0x0d;
-		mem[0xf][0xdf1] = 0xf5;
-		mem[0xf][0xdf5] = 0x00;
-		mem[0xf][0xdf6] = 0x03;
-
+	
 		// Inicialização dos registradores
 		_acc = 0;
 		_cb  = 0;
@@ -52,8 +39,28 @@ public:
 		running = false;
 		indirect = false;
 		step = 0;
+
+		/*****DEBUG*****/
+		/*****DEBUG*****/
+		/*****DEBUG*****/
+		/*****DEBUG*****/
+
+		mem[0][0] = 0x32;
+		mem[0][1] = 0x80;
+		mem[0][2] = 0x04;
+		mem[0][3] = 0x30;
+		mem[0][4] = 0xfa;
+		mem[0][5] = 0xbc;
+		mem[0xf][0xabc] = 0xff;
+
 	}
 	
+	uint16_t getIndirectPtr() {
+		uint16_t OP = _ri & 0x0fff;
+		uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | (uint16_t)mem[_cb][OP + 1] & 0x00ff;
+		return ptr;
+	}	
+
 	void debug() {
 		if (DEBUG)
 			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << _cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: " << dec << _acc << endl;
@@ -85,7 +92,7 @@ public:
 		}
 		else {
 			uint16_t OP = _ri & 0x0fff;
-			uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | (uint16_t)mem[_cb][OP + 1] & 0x00ff;
+			uint16_t ptr  = getIndirectPtr();
 			_cb = (uint8_t)(ptr >> 4*3);
 			_ci = ptr & 0x0fff;
 			indirect = false;
@@ -122,31 +129,86 @@ public:
 	}
 
 	void plus() {
-
+		if (!indirect) {
+			_acc += mem[_cb][_ri & 0x0fff];
+		}
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc += mem[ptr >> 4*3][ptr & 0x0fff];
+			indirect = false;
+		}	
 	}
 
 	void minus() {
+		if (!indirect) {
+			_acc -= mem[_cb][_ri & 0x0fff];
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc -= mem[ptr >> 4*3][ptr & 0x0fff];
+			indirect = false;
+		}	
 
 	}
 
 	void multiply() {
+		if (!indirect) {
+			_acc *= mem[_cb][_ri & 0x0fff];
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc *= mem[ptr >> 4*3][ptr & 0x0fff];
+			indirect = false;
+		}	
 
 	}
 
 	void divide() {
+		if (!indirect) {
+			_acc /= mem[_cb][_ri & 0x0fff];
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc /= mem[ptr >> 4*3][ptr & 0x0fff];
+			indirect = false;
+		}	
 
 	}
 
 	void LD() {
-
+		if (!indirect) {
+			_acc = (int16_t)((int8_t)mem[_cb][_ri & 0x0fff]);
+			cout << "value: " << (int16_t)((int8_t)mem[_cb][_ri & 0x0fff]) << endl;
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc = (int16_t)((int8_t)mem[ptr >> 4*3][ptr & 0x0fff]);
+			indirect = false;
+		}	
 	}
 
 	void MM() {
 
+		if (!indirect) {
+			mem[_cb][_ri & 0x0fff] = (uint16_t)_acc;
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			mem[ptr >> 4*3][ptr & 0x0fff] = (uint16_t)_acc;
+			indirect = false;
+		}	
 	}
 
 	void SC() {
 
+		if (!indirect) {
+			_acc = mem[_cb][_ri & 0x0fff];
+		}	
+		else {
+			uint16_t ptr = getIndirectPtr();
+			_acc = mem[ptr >> 4*3][ptr & 0x0fff];
+			indirect = false;
+		}	
 	}
 
 	void OS() {
@@ -164,7 +226,7 @@ public:
 
 		// garante que o modo indireto só se mantem em caso de instrução de acesso à memóra
 		
-		if (CO > 0x2 && indirect)
+		if ((CO == 0x3 || CO > 0xa) && indirect)
 			indirect = false;
 
 		switch(CO) {
@@ -234,12 +296,3 @@ public:
 
 };
 
-
-int main() {
-
-	VM *vm = new VM();
-	vm->start();
-	vm->run();
-	return 0;
-
-}
