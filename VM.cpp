@@ -19,10 +19,12 @@ class VM
 
 	// Tabela de tamanhos das instruções
 	const int instruction_sizes[0xd] = {2,2,2,1,2,2,2,2,2,2,2,1,1};
-
+	
+	// Variáveis de estado da maquina virtual e controle	
 	bool running;
 	bool indirect;
 	int step;
+
 public:
 	VM() {
 		// Inicialização do banco de memórias
@@ -46,15 +48,21 @@ public:
 		/*****DEBUG*****/
 
 		mem[0][0] = 0x32;
-		mem[0][1] = 0x80;
-		mem[0][2] = 0x04;
-		mem[0][3] = 0x30;
-		mem[0][4] = 0xfa;
-		mem[0][5] = 0xbc;
-		mem[0xf][0xabc] = 0xff;
-
+		mem[0][1] = 0x90;
+		mem[0][2] = 0xfe;
+		mem[0][3] = 0x40;
+		mem[0][4] = 0xfd;
+		mem[0][5] = 0x32;
+		mem[0][6] = 0x80;
+		mem[0][7] = 0xfe;
+		mem[0][8] = 0x30;
+		mem[0][0xfd] = 0xff;
+		mem[0][0xfe] = 0xfa;
+		mem[0][0xff] = 0xbc;
+		mem[0xf][0xabc] = 0x01; 
 	}
 	
+	// retorna o endereço contido em uma celula de memória referenciada por acesso indireto à mem.
 	uint16_t getIndirectPtr() {
 		uint16_t OP = _ri & 0x0fff;
 		uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | (uint16_t)mem[_cb][OP + 1] & 0x00ff;
@@ -63,12 +71,12 @@ public:
 
 	void debug() {
 		if (DEBUG)
-			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << _cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: " << dec << _acc << endl;
+			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << _cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (int)_acc << endl;
 
 	}
 		
 	// Busca a instrução a ser executada baseada em _ci e a armazena em _ri
-	void fetch() {
+	int fetch() {
 		// Verifica o CO da instrução para saber qual o seu tamanho
 		int instruction_size = instruction_sizes[mem[_cb][_ci] >> 4];
 
@@ -80,10 +88,10 @@ public:
 			_ri |= (uint16_t)mem[_cb][_ci + 1] & 0x00ff;
 		}
 		
-		// Atualiza o _ci
-		_ci += instruction_size;
+		return instruction_size;
 	}
-
+	
+	// Instrução JUMP UNCONDITIONAL
 	void JP() {
 		if (!indirect) {
 			_ci = _cb << 4;
@@ -122,6 +130,9 @@ public:
 				cout << "Indirect mode ON" << endl;
 				indirect = true;
 				break;
+			case 0x3: // NOP;
+				cout << "NOP" << endl;
+				break;
 			default:
 				cout << "Fail!" << endl;
 				break;
@@ -130,22 +141,22 @@ public:
 
 	void plus() {
 		if (!indirect) {
-			_acc += mem[_cb][_ri & 0x0fff];
+			_acc += (int8_t)mem[_cb][_ri & 0x0fff];
 		}
 		else {
 			uint16_t ptr = getIndirectPtr();
-			_acc += mem[ptr >> 4*3][ptr & 0x0fff];
+			_acc += (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 			indirect = false;
 		}	
 	}
 
 	void minus() {
 		if (!indirect) {
-			_acc -= mem[_cb][_ri & 0x0fff];
+			_acc -= (int8_t)mem[_cb][_ri & 0x0fff];
 		}	
 		else {
 			uint16_t ptr = getIndirectPtr();
-			_acc -= mem[ptr >> 4*3][ptr & 0x0fff];
+			_acc -= (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 			indirect = false;
 		}	
 
@@ -153,11 +164,11 @@ public:
 
 	void multiply() {
 		if (!indirect) {
-			_acc *= mem[_cb][_ri & 0x0fff];
+			_acc *= (int8_t)mem[_cb][_ri & 0x0fff];
 		}	
 		else {
 			uint16_t ptr = getIndirectPtr();
-			_acc *= mem[ptr >> 4*3][ptr & 0x0fff];
+			_acc *= (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 			indirect = false;
 		}	
 
@@ -165,11 +176,11 @@ public:
 
 	void divide() {
 		if (!indirect) {
-			_acc /= mem[_cb][_ri & 0x0fff];
+			_acc /= (int8_t)mem[_cb][_ri & 0x0fff];
 		}	
 		else {
 			uint16_t ptr = getIndirectPtr();
-			_acc /= mem[ptr >> 4*3][ptr & 0x0fff];
+			_acc /= (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 			indirect = false;
 		}	
 
@@ -177,12 +188,11 @@ public:
 
 	void LD() {
 		if (!indirect) {
-			_acc = (int16_t)((int8_t)mem[_cb][_ri & 0x0fff]);
-			cout << "value: " << (int16_t)((int8_t)mem[_cb][_ri & 0x0fff]) << endl;
+			_acc = (int8_t)mem[_cb][_ri & 0x0fff];
 		}	
 		else {
 			uint16_t ptr = getIndirectPtr();
-			_acc = (int16_t)((int8_t)mem[ptr >> 4*3][ptr & 0x0fff]);
+			_acc = (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 			indirect = false;
 		}	
 	}
@@ -201,14 +211,6 @@ public:
 
 	void SC() {
 
-		if (!indirect) {
-			_acc = mem[_cb][_ri & 0x0fff];
-		}	
-		else {
-			uint16_t ptr = getIndirectPtr();
-			_acc = mem[ptr >> 4*3][ptr & 0x0fff];
-			indirect = false;
-		}	
 	}
 
 	void OS() {
@@ -286,8 +288,11 @@ public:
 		bool reset_indirect = false;
 		while (step < steps && running) {
 			debug();
-			this->fetch();
+			int instructionSize = this->fetch();
 			this->decode();
+
+			//atualiza o _ci
+			_ci += instructionSize;
 			step++;
 		}
 		debug();
