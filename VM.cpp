@@ -87,7 +87,6 @@ public:
 			_ci += size;
 		else {
 			_ci = ci_info->addr + size;
-			cout << "addr: " << hex << _ci << endl;
 			ci_info->redirected = false;
 		}
 	}
@@ -101,7 +100,11 @@ public:
 	
 	void debug(uint8_t instructionSize) {
 		if (DEBUG)
-			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << (uint16_t)_cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (uint16_t)_acc << endl;
+			cout << "[" << step << ":" << endl;
+			cout << "Registradores    :" << hex <<" | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
+			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
+			cout << "Acumulador       :" << " | _acc: " << dec << (uint16_t)_acc << endl;
+			cout << "]" <<  endl;
 
 	}
 		
