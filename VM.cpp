@@ -14,7 +14,7 @@ class VM
 
 	// Registradores
 	int16_t _acc;
-	uint16_t _cb;
+	uint8_t _cb;
 	uint16_t _ri, _ci;
 
 	// Tabela de tamanhos das instruções
@@ -47,31 +47,32 @@ public:
 		/*****DEBUG*****/
 		/*****DEBUG*****/
 
-		mem[0][0] = 0x32;
-		mem[0][1] = 0x90;
-		mem[0][2] = 0xfe;
-		mem[0][3] = 0x40;
-		mem[0][4] = 0xfd;
-		mem[0][5] = 0x32;
-		mem[0][6] = 0x80;
-		mem[0][7] = 0xfe;
-		mem[0][8] = 0x30;
-		mem[0][0xfd] = 0xff;
-		mem[0][0xfe] = 0xfa;
-		mem[0][0xff] = 0xbc;
-		mem[0xf][0xabc] = 0x01; 
+		mem[0][0] = 0xa0;
+		mem[0][1] = 0x04;
+		mem[0][2] = 0x33;
+		mem[0][3] = 0x30;
+		mem[0][4] = 0xff;
+		mem[0][5] = 0xff;
+		mem[0][6] = 0x40;
+		mem[0][7] = 0xff;
+		mem[0][8] = 0x32;
+		mem[0][9] = 0x00;
+		mem[0][0xa] = 0x04;
+		mem[0][0xb] = 0x30;
+		mem[0][0xff] = 0x01;
+		mem[0][0x101] = 0x30;
 	}
 	
 	// retorna o endereço contido em uma celula de memória referenciada por acesso indireto à mem.
 	uint16_t getIndirectPtr() {
 		uint16_t OP = _ri & 0x0fff;
-		uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | (uint16_t)mem[_cb][OP + 1] & 0x00ff;
+		uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | ((uint16_t)mem[_cb][OP + 1] & 0x00ff);
 		return ptr;
 	}	
-
-	void debug() {
+	
+	void debug(int instructionSize) {
 		if (DEBUG)
-			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << _cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (int)_acc << endl;
+			cout << hex << step << ":" << " _ci: " << (_ci - (uint16_t)instructionSize) << " / _cb: " << (uint16_t)_cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (int)_acc << endl;
 
 	}
 		
@@ -102,7 +103,7 @@ public:
 			uint16_t OP = _ri & 0x0fff;
 			uint16_t ptr  = getIndirectPtr();
 			_cb = (uint8_t)(ptr >> 4*3);
-			_ci = ptr & 0x0fff;
+			_ci = ((_cb << 4) << 4*3 ) | (ptr & 0x0fff);
 			indirect = false;
 		}
 	}
@@ -208,21 +209,25 @@ public:
 			indirect = false;
 		}	
 	}
-
+	// Instrução SUBROTINE CALL
 	void SC() {
-
+		// A instrução deve guardar o endereço de retorno em \yxxx (com base em _cb) e executar a próxima instrução (\yxxx + 0x2)
+		uint16_t ret_addr = _ci;
+		mem[_cb][_ri & 0x0fff] = (uint8_t)ret_addr;
+		mem[_cb][(_ri & 0x0fff) + 1] = (uint8_t)(ret_addr);
+		_ci = (_cb << 4) | (_ri & 0x0fff);  
+		
 	}
 
 	void OS() {
-
+		// Empty
 	}
 
 	void IO() {
 
 	}
 
-
-	void decode() {
+	uint16_t decode() {
 		// Obtem o CO da instrução
 		uint16_t CO = _ri >> 4*3;
 
@@ -275,7 +280,7 @@ public:
 				cout << "Instrução inválida" << endl;
 				break;
 		}
-	
+		return -1;
 	}
 
 	void start() {
@@ -287,16 +292,13 @@ public:
 		// Controle para manter a máquina em modo indireto apenas se próxima instrução for de acesso a memória
 		bool reset_indirect = false;
 		while (step < steps && running) {
-			debug();
 			int instructionSize = this->fetch();
 			this->decode();
-
 			//atualiza o _ci
 			_ci += instructionSize;
+			debug(instructionSize);
 			step++;
 		}
-		debug();
-
 	}
 
 };
