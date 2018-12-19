@@ -7,6 +7,18 @@
 #define DEBUG true
 using namespace std;
 
+struct update_ci_info {
+	bool		redirected;
+	uint16_t 	addr;
+	uint8_t		size; 
+
+	update_ci_info() {
+		redirected = false;
+		addr = 0xdead;
+		size = 0;
+	}	
+};
+
 class VM 
 {
 	// Banco de memórias
@@ -24,7 +36,7 @@ class VM
 	bool running;
 	bool indirect;
 	int step;
-
+	update_ci_info *ci_info;
 public:
 	VM() {
 		// Inicialização do banco de memórias
@@ -41,6 +53,8 @@ public:
 		running = false;
 		indirect = false;
 		step = 0;
+
+		ci_info = new update_ci_info();
 
 		/*****DEBUG*****/
 		/*****DEBUG*****/
@@ -63,6 +77,20 @@ public:
 		mem[0][0x101] = 0x30;
 	}
 	
+	~VM() {
+		if (ci_info != NULL)
+			delete ci_info;
+	}
+
+	void update_ci(int size) {
+		if (!ci_info->redirected)
+			_ci += size;
+		else {
+			_ci = ci_info->addr;
+			ci_info->redirected = false;
+		}
+	}
+
 	// retorna o endereço contido em uma celula de memória referenciada por acesso indireto à mem.
 	uint16_t getIndirectPtr() {
 		uint16_t OP = _ri & 0x0fff;
@@ -215,7 +243,8 @@ public:
 		uint16_t ret_addr = _ci;
 		mem[_cb][_ri & 0x0fff] = (uint8_t)ret_addr;
 		mem[_cb][(_ri & 0x0fff) + 1] = (uint8_t)(ret_addr);
-		_ci = (_cb << 4) | (_ri & 0x0fff);  
+		ci_info->addr = (_cb << 4) | (_ri & 0x0fff);  
+		ci_info->redirected = true;
 		
 	}
 
@@ -295,7 +324,8 @@ public:
 			int instructionSize = this->fetch();
 			this->decode();
 			//atualiza o _ci
-			_ci += instructionSize;
+			update_ci(instructionSize);
+
 			debug(instructionSize);
 			step++;
 		}
