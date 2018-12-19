@@ -82,11 +82,12 @@ public:
 			delete ci_info;
 	}
 
-	void update_ci(int size) {
+	void update_ci(uint8_t size) {
 		if (!ci_info->redirected)
 			_ci += size;
 		else {
-			_ci = ci_info->addr;
+			_ci = ci_info->addr + size;
+			cout << "addr: " << hex << _ci << endl;
 			ci_info->redirected = false;
 		}
 	}
@@ -98,16 +99,16 @@ public:
 		return ptr;
 	}	
 	
-	void debug(int instructionSize) {
+	void debug(uint8_t instructionSize) {
 		if (DEBUG)
-			cout << hex << step << ":" << " _ci: " << (_ci - (uint16_t)instructionSize) << " / _cb: " << (uint16_t)_cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (int)_acc << endl;
+			cout << hex << step << ":" << " _ci: " << _ci << " / _cb: " << (uint16_t)_cb << " / _ri: " << _ri << " / IN: " << indirect << " / HA: " << !running << " / _acc: "<< dec << (uint16_t)_acc << endl;
 
 	}
 		
 	// Busca a instrução a ser executada baseada em _ci e a armazena em _ri
 	int fetch() {
 		// Verifica o CO da instrução para saber qual o seu tamanho
-		int instruction_size = instruction_sizes[mem[_cb][_ci] >> 4];
+		uint8_t instruction_size = instruction_sizes[mem[_cb][_ci] >> 4];
 
 		// Obtem o primeiro byte da instrução
 		_ri  = mem[_cb][_ci];
@@ -123,16 +124,17 @@ public:
 	// Instrução JUMP UNCONDITIONAL
 	void JP() {
 		if (!indirect) {
-			_ci = _cb << 4;
-			_ci = _ci << 4*3;
-			_ci |= _ri & 0x0fff;
+			ci_info->addr	= _cb << 4;
+			ci_info->addr	= _ci << 4*3;
+			ci_info->addr	|= _ri & 0x0fff;
 		}
 		else {
 			uint16_t OP = _ri & 0x0fff;
 			uint16_t ptr  = getIndirectPtr();
 			_cb = (uint8_t)(ptr >> 4*3);
-			_ci = ((_cb << 4) << 4*3 ) | (ptr & 0x0fff);
 			indirect = false;
+			ci_info->addr = ((_cb << 4) << 4*3 ) | (ptr & 0x0fff);
+			ci_info->redirected = true;
 		}
 	}
 	
@@ -323,10 +325,12 @@ public:
 		while (step < steps && running) {
 			int instructionSize = this->fetch();
 			this->decode();
+
+			debug(instructionSize);
+
 			//atualiza o _ci
 			update_ci(instructionSize);
 
-			debug(instructionSize);
 			step++;
 		}
 	}
