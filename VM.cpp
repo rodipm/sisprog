@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 
 #define banks 16
 #define bank_size 4096
@@ -25,7 +26,7 @@ class VM
 	uint8_t mem[banks][bank_size];
 
 	// Registradores
-	int16_t _acc;
+	int8_t _acc;
 	uint8_t _cb;
 	uint16_t _ri, _ci;
 
@@ -99,12 +100,13 @@ public:
 	}	
 	
 	void debug(uint8_t instructionSize) {
-		if (DEBUG)
+		if (DEBUG) {
 			cout << "[" << step << ":" << endl;
-			cout << "Registradores    :" << hex <<" | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
+			cout << "Registradores    :" << setfill('0') << setw(4) << hex << " | _ci: " << "0x" << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
 			cout << "Acumulador       :" << " | _acc: " << dec << (uint16_t)_acc << endl;
 			cout << "]" <<  endl;
+		}
 
 	}
 		
