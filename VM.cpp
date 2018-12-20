@@ -136,24 +136,6 @@ public:
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
 			cout << "Acumulador       :" << " | _acc: " << dec << _acc << endl;
 			cout << "]" <<  endl;
-<<<<<<< HEAD
-		}
-
-	}
-		
-	// Busca a instrução a ser executada baseada em _ci e a armazena em _ri
-	int fetch() {
-		// Verifica o CO da instrução para saber qual o seu tamanho
-		uint8_t instruction_size = instruction_sizes[mem[_cb][_ci] >> 4];
-
-		// Obtem o primeiro byte da instrução
-		_ri  = mem[_cb][_ci];
-		_ri = _ri << 8;
-		// Caso seja uma instrução de 2 bytes, concatena o segundo byte a _ri
-		if (instruction_size == 2 || indirect) {
-			_ri |= (uint16_t)mem[_cb][_ci + 1] & 0x00ff;
-=======
->>>>>>> io
 		}
 	}
 		
