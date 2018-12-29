@@ -159,9 +159,9 @@ public:
 		str << hex << *file_number;
 		ofstream hex_file (file_name.substr(0, file_name.length() - 4) + str.str() + ".o", ofstream::out);
 		ofstream bin_file (file_name.substr(0, file_name.length() - 4) + str.str() + ".bin", ofstream::out);
-		str.clear();
+		str.str("");
 
-		str << hex << (*initial_addr >> 8) << " " << (*initial_addr & 0x00ff) << " " << hex << (*block_size & 0x00ff) << endl;
+		str << hex << setfill('0') << setw(2) << ((*initial_addr >> 8) & 0x00ff) << " " << hex << setfill('0') << setw(2) << (*initial_addr & 0x00ff) << " " << hex << setfill('0') << setw(2) << (*block_size & 0x00ff) << endl;
 		str_bin << (char)(*initial_addr >> 8) << (char)(*initial_addr & 0x00ff) << (char)(*block_size & 0x00ff);
 
 		for (int i = 0; i < obj_list.size(); i++) {
@@ -205,8 +205,8 @@ public:
 		
 		bin_file.close();
 		hex_file.close();
-		str.clear();
-		str_bin.clear();
+		str.str("");
+		str_bin.str("");
 		*file_number += 1;
 	}
 
@@ -303,13 +303,13 @@ public:
 						}
 
 						stringstream str;
-						str << lines[i].arg.substr(1, string::npos);
+						str << hex << lines[i].arg.substr(1, string::npos);
 						str >> *initial_addr;
 						*_ci = *initial_addr;
 						continue;
 					} else if (lines[i].mnemonic == "$") { // ARRAY
 						stringstream str;
-						str << lines[i].arg.substr(1, string::npos);
+						str << hex << lines[i].arg.substr(1, string::npos);
 						int s_arr;
 						str >> s_arr;
 						s_arr &= 0x0fff;
@@ -323,7 +323,7 @@ public:
 							exit(1);
 						}
 						stringstream str;
-						str << lines[i].arg.substr(1, string::npos);
+						str << hex << lines[i].arg.substr(1, string::npos);
 						int k;
 						str >> k;
 						k &= 0x00ff;
