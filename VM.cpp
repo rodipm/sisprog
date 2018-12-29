@@ -132,9 +132,9 @@ public:
 	void debug(uint8_t instructionSize) {
 		if (DEBUG) {
 			cout << "[" << step << ":" << endl;
-			cout << "Registradores    :" << setfill('0') << setw(4) << hex << " | _ci: " << "0x" << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
+			cout << "Registradores    :" << hex << " | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
-			cout << "Acumulador       :" << " | _acc: " << dec << _acc << endl;
+			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
 			cout << "]" <<  endl;
 		}
 	}
