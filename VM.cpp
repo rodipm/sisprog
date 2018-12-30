@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 #define banks 16
 #define bank_size 4096
@@ -54,6 +55,8 @@ class VM
 	// Stream para read e write (inicializada com nullptr)
 	iostream *stream;	
 	
+	// File stream for io_devices[2];
+	fstream *file_stream;
 	// Member Instruction Pointer para guardar a instrução a ser executada (desacoplando fetch e decode)
 	void (VM::*execute)(void);
 public:
@@ -77,6 +80,7 @@ public:
 
 		// Inicialização do device padrao (stdin e stdout)
 		stream = new iostream(nullptr);
+		stream->rdbuf(nullptr);
 		io_devices[0][0] = cin.rdbuf();
 		io_devices[0][1] = cout.rdbuf();
 		for (int i = 1; i < 3; i++)
@@ -89,22 +93,23 @@ public:
 		/*****DEBUG*****/
 
 		mem[0][0x00] 	= 0x30; //<- Halt Machine
-		mem[3][0x00] 	= 0x40; //TODO <- Loader
-		mem[3][0x01] 	= 0x02;
-		mem[3][0x02] 	= 0x01;
-		mem[0][0x04] 	= 0x30;
-		mem[0][0x05] 	= 0x00;
-		mem[0][0x06] 	= 0x00;
-		mem[0][0x07] 	= 0x00;
-		mem[0][0x08] 	= 0x00;
-		mem[0][0xfe] 	= 0x00;
-		mem[0][0xff] 	= 0x00;
+		mem[0][0x21] 	= 0x33; //TODO <- Loader
+		mem[0][0x22] 	= 0x33;
+		mem[0][0x23] 	= 0x01;
+		mem[0][0x24] 	= 0x33;
+		mem[0][0x25] 	= 0x33;
+		mem[0][0x26] 	= 0x33;
+		mem[0][0x27] 	= 0x33;
+		mem[0][0x28] 	= 0x33;
+		mem[0][0x2e] 	= 0x33;
+		mem[0][0x30] 	= 0xff;
 		mem[0xf][0xfff]	= 0x00;
 	}
 	
 	~VM() {
 		delete ci_info;
 		delete stream;
+		delete file_stream;
 	}
 
 /***********************************************************************************************************************************************/
@@ -135,7 +140,21 @@ public:
 			cout << "Registradores    :" << hex << " | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
 			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
+			cout << "Mem		  :" << " | 0x30: " << hex << ((uint16_t)mem[0][0x30] & 0x00ff) << endl;
 			cout << "]" <<  endl;
+			
+			cout << endl << "##########MEM MAP##########" << endl;
+			cout << "    ";
+			for (int i = 0; i <= 0xf; i++)
+				cout << hex << setfill('0') << setw(2) << i << " ";
+			cout << endl << endl;
+			for (int i = 0; i <= 0xf; i++) {
+				cout << hex << setfill('0') << setw(2) << i << "  ";
+				for (int j = 0; j <= 0xf; j++)
+					cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
+				cout << endl;
+			}
+
 		}
 	}
 		
@@ -266,11 +285,11 @@ public:
 	void MM() {
 
 		if (!indirect) {
-			mem[_cb][_ri & 0x0fff] = (uint16_t)_acc;
+			mem[_cb][_ri & 0x0fff] = (uint16_t)_acc & 0x00ff;
 		}	
 		else {
 			uint16_t ptr = getIndirectPtr();
-			mem[ptr >> 4*3][ptr & 0x0fff] = (uint16_t)_acc;
+			mem[ptr >> 4*3][ptr & 0x0fff] = (uint16_t)_acc & 0x00ff;
 			indirect = false;
 		}	
 	}
@@ -287,6 +306,7 @@ public:
 
 	// Instrução de chamada do sistema operacional 0xBX
 	void OS() {
+		indirect = false;
 		// Empty
 	}
 
@@ -296,7 +316,7 @@ public:
 		uint16_t OP = ((_ri & 0x0f00) >> 8);
 		// Device a ser operado
 		uint16_t DEV = OP & 0x3; // 0x3 = 0b0011 -> mascara para os dois últimos bits apenas
-		
+
 		// Para transformar int em char *, primeiramente transformamos em string e depois em c_str (char *).
 		stringstream str;
 		str << _acc;
@@ -338,12 +358,20 @@ public:
 		else { //0b0000
 			if (DEV != 0) {
 				if (io_devices[DEV-1][0] != nullptr) {
+					if (stream->rdbuf() == nullptr) {
+						stream->rdbuf(io_devices[DEV-1][0]);
+					}
 					char buff[1];
-					stream->rdbuf(io_devices[DEV-1][0]);
 					stream->read(buff, 1);
 					// Apenas fará sentido se o input for o stdin.
-					cin.ignore(120, '\n');
-					_acc = (int16_t)buff[0] >= 97 ? (int16_t)buff[0] - 'a' + 0xa : (int16_t)buff[0] - '0';
+					//if (DEV == 1)
+						//cin.ignore(120, '\n');
+					//_acc = buff[0] >= 97 ? buff[0] - 'a' + 0xa : buff[0] - '0';
+					_acc = (int8_t)buff[0];
+				}
+				else {
+					cout << "TRYING TO GET DATA FROM UNKNOWN FILE" << endl;
+					exit(1);
 				}
 			}
 		}
@@ -428,8 +456,39 @@ public:
 		return -1;
 	}
 
+	// Preloader carregará o loader na memória
+	void preloader() {
+		fstream file("loader0.bin", ios_base::in | ios_base::binary);
+		cout << endl << "#############PRELOADER#############" << endl;
+		
+		stringstream str;
+		char c;
+		while (file.get(c)) {
+			unsigned int tmp =  (unsigned int)c;
+			str << hex << setfill('0') << setw(2) << (tmp & 0xff);
+		}
+
+		cout << str.str() << endl;
+		int addr = 1;	
+		for (int i = 6; i < str.str().length() - 2; i+=2) {
+			char s[] = {str.str()[i], str.str()[i+1]};
+			stringstream ss;
+			ss << hex << s;
+			unsigned short int tmp;
+			ss >> tmp;
+			mem[0][addr++] = tmp;
+		}
+
+		file.close();
+
+		file_stream = new fstream("test0.bin", ios_base::in | ios_base::out | ios_base::binary);
+		io_devices[1][0] = file_stream->rdbuf();
+		io_devices[1][1] = file_stream->rdbuf();
+	}
+
 	// Inicializações do sistema
 	void start() {
+		preloader();
 		step = 0;
 		running = true;
 	}

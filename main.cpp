@@ -1,18 +1,21 @@
 #include <iostream>
 #include "VM.cpp"
-//#include "Assembler.cpp"
+#include "Assembler.cpp"
 
-int main(int arcg, char** argv)
+using namespace std;
+
+int main(int argc, char** argv)
 {
+	Assembler *as = new Assembler();
+	as->Assemble("loader.asm");
+	as->Assemble("test.asm");
 
 	VM *vm = new VM();
 	vm->start();
 	vm->run();
 	
-	//Assembler *as = new Assembler();
-
 	delete vm;
-	//delete as;
+	delete as;
 
 	return 0;
 }

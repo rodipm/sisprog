@@ -82,6 +82,7 @@ public:
 		delete initial_addr;
 		delete _ci;
 		delete block_size;
+		delete file_number;
 	}
 	
 	vector<file_line> processFile(string file) {
@@ -213,6 +214,10 @@ public:
 	void Assemble(string file) {
 
 		file_name = file;
+		*file_number = 0;
+		*_ci = 0;
+		*initial_addr = 0;
+		*block_size = 0;
 		
 		// Processa todas as linhas do arquivo
 		vector<file_line> lines = processFile(file);
@@ -404,9 +409,3 @@ public:
 };
 
 
-int main(int argc, char **argv) {
-	Assembler *as = new Assembler();
-	as->Assemble("teste.asm");
-	delete as;
-	return 0;
-}

@@ -1,0 +1,3 @@
+	@	/0030
+INICIO	CN	/00	;Halt
+	#	INICIO
