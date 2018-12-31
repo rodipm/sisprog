@@ -1,3 +1,7 @@
-	@	/0030
-INICIO	CN	/00	;Halt
+	@	/0090
+INICIO	+	UM
+	+	UM
+	IO	/05
+	JP	/0000
+UM	K	/01
 	#	INICIO

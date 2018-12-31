@@ -7,8 +7,8 @@
 
 #define banks 16
 #define bank_size 4096
-#define steps 100
-#define DEBUG true
+#define steps 150
+//#define DEBUG true
 
 using namespace std;
 
@@ -42,6 +42,7 @@ class VM
 	bool indirect;
 	int step;
 	update_ci_info *ci_info;
+	bool DEBUG;
 	
 	// Io devices array
 	// Podem ser referenciados 3 devices pela instrucao IO, ja que o primeiro referencia todos
@@ -140,7 +141,6 @@ public:
 			cout << "Registradores    :" << hex << " | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
 			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
-			cout << "Mem		  :" << " | 0x30: " << hex << ((uint16_t)mem[0][0x30] & 0x00ff) << endl;
 			cout << "]" <<  endl;
 			
 			cout << endl << "##########MEM MAP##########" << endl;
@@ -319,7 +319,7 @@ public:
 
 		// Para transformar int em char *, primeiramente transformamos em string e depois em c_str (char *).
 		stringstream str;
-		str << _acc;
+		str << hex << setfill('0') << setw(2) << (uint16_t)_acc;
 
 		// Processamento do OP para verificar que tipo de instrução de IO deve ser eecutada
 		// verifica os dois bits mais significativos dos ultimos 4 bits da instruçao
@@ -329,8 +329,7 @@ public:
 				for (int i = 0; i < 3; i++) {
 					if (io_devices[i][1] != nullptr) {
 						stream->rdbuf(io_devices[i][1]);
-						stream->write(str.str().c_str(), sizeof(int16_t));
-						stream->flush();	
+						stream->write(str.str().c_str(), 2);
 					}
 				}
 					
@@ -338,8 +337,7 @@ public:
 			else{
 				if (io_devices[DEV-1][1] != nullptr) {
 					stream->rdbuf(io_devices[DEV-1][1]);
-					stream->write(str.str().c_str(), sizeof(int16_t));
-					stream->flush();
+					stream->write(str.str().c_str(), 2);
 				}
 			}
 		}
@@ -364,9 +362,8 @@ public:
 					char buff[1];
 					stream->read(buff, 1);
 					// Apenas fará sentido se o input for o stdin.
-					//if (DEV == 1)
-						//cin.ignore(120, '\n');
-					//_acc = buff[0] >= 97 ? buff[0] - 'a' + 0xa : buff[0] - '0';
+					if (DEV == 1)
+						cin.ignore(120, '\n');
 					_acc = (int8_t)buff[0];
 				}
 				else {
@@ -458,6 +455,7 @@ public:
 
 	// Preloader carregará o loader na memória
 	void preloader() {
+		DEBUG = false;
 		fstream file("loader0.bin", ios_base::in | ios_base::binary);
 		cout << endl << "#############PRELOADER#############" << endl;
 		
@@ -484,6 +482,7 @@ public:
 		file_stream = new fstream("test0.bin", ios_base::in | ios_base::out | ios_base::binary);
 		io_devices[1][0] = file_stream->rdbuf();
 		io_devices[1][1] = file_stream->rdbuf();
+		DEBUG = true;
 	}
 
 	// Inicializações do sistema

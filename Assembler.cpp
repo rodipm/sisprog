@@ -39,8 +39,8 @@ struct simbol {
 struct obj {
 	WORD op;
 	WORD arg;
-
-	obj(WORD o, WORD a) : op(o), arg(a) {}
+	bool pseudo;
+	obj(WORD o, WORD a, bool p = false) : op(o), arg(a), pseudo(p) {}
 };
 
 class Assembler
@@ -169,7 +169,7 @@ public:
 			str << hex << setfill('0') << setw(2) << (((obj_list[i].op | obj_list[i].arg) & 0xff00) >> 8) << " ";
 			str_bin << (char)(((obj_list[i].op | obj_list[i].arg) & 0xff00) >> 8);
 
-			if ((obj_list[i].arg & 0x00ff) != 0x00) {
+			if ((obj_list[i].arg & 0x00ff) != 0x00 || (mnemonic_table[obj_list[i].op >> 12].size == 2 && !obj_list[i].pseudo)) {
 				str << hex << setfill('0') << setw(2) << (obj_list[i].arg & 0x00ff) << " ";
 				str_bin << (char)(obj_list[i].arg & 0x00ff); 
 			}
@@ -194,7 +194,7 @@ public:
 		check_sum = ~check_sum;
 		check_sum += 0x01;
 
-		str_bin << check_sum; 
+		str_bin << (char)check_sum; 
 		str << endl << hex << (WORD)check_sum << endl;
 
 		cout << "+++++++++++ HEX OBJ(" << *file_number << ") +++++++++++" << endl << str.str() << endl;
@@ -333,7 +333,7 @@ public:
 						str >> k;
 						k &= 0x00ff;
 						if (step == 2) {
-							obj_list.push_back(obj((k << 8) & 0xf000, (k & 0x000f) << 8));
+							obj_list.push_back(obj((k << 8) & 0xf000, (k & 0x000f) << 8, true));
 							do_list(list, lines[i], i, obj_list.back());
 							*block_size += 1;
 							continue;
