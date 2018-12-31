@@ -89,6 +89,7 @@ public:
 		// Abre o arquivo .asm para ser lido
 		fstream input;
 	       	input.open(file, ios_base::in);
+
 		if (!input)
 			exit(1);
 		
