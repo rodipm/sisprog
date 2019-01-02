@@ -1,7 +1,8 @@
 	@	/0090
 INICIO	+	UM
-	+	UM
+	+	UM[1]
 	IO	/05
 	JP	/0000
 UM	K	/01
+DOIS	K	/02
 	#	INICIO

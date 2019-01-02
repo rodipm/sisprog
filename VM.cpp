@@ -7,7 +7,7 @@
 
 #define banks 16
 #define bank_size 4096
-#define steps 150
+#define steps 1000 
 //#define DEBUG true
 
 using namespace std;
@@ -94,7 +94,7 @@ public:
 		/*****DEBUG*****/
 
 		mem[0][0x00] 	= 0x30; //<- Halt Machine
-		mem[0][0x21] 	= 0x33; //TODO <- Loader
+		mem[0][0x21] 	= 0x33; 
 		mem[0][0x22] 	= 0x33;
 		mem[0][0x23] 	= 0x01;
 		mem[0][0x24] 	= 0x33;
@@ -143,17 +143,17 @@ public:
 			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
 			cout << "]" <<  endl;
 			
-			cout << endl << "##########MEM MAP##########" << endl;
-			cout << "    ";
-			for (int i = 0; i <= 0xf; i++)
-				cout << hex << setfill('0') << setw(2) << i << " ";
-			cout << endl << endl;
-			for (int i = 0; i <= 0xf; i++) {
-				cout << hex << setfill('0') << setw(2) << i << "  ";
-				for (int j = 0; j <= 0xf; j++)
-					cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
-				cout << endl;
-			}
+			//cout << endl << "##########MEM MAP##########" << endl;
+			//cout << "    ";
+			//for (int i = 0; i <= 0xf; i++)
+			//	cout << hex << setfill('0') << setw(2) << i << " ";
+			//cout << endl << endl;
+			//for (int i = 0; i <= 0xf; i++) {
+			//	cout << hex << setfill('0') << setw(2) << i << "  ";
+			//	for (int j = 0; j <= 0xf; j++)
+			//		cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
+			//	cout << endl;
+			//}
 
 		}
 	}

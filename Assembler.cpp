@@ -54,6 +54,8 @@ class Assembler
 	int *block_size;
 	int *file_number;
 	string file_name;
+	uint16_t index;
+	
 public:
 	Assembler(){
 		initial_addr = new int;
@@ -61,6 +63,7 @@ public:
 		file_number = new int;
 		block_size = new int;
 		*block_size = *initial_addr = *file_number = 0;
+		index = 0;
 
 		// Inicialização da tabela de mnemonicos
 		mnemonic_table[0x00].name = "JP"; mnemonic_table[0x00].size = 2; mnemonic_table[0x00].op = 0x0;
@@ -239,25 +242,6 @@ public:
 			// Analizamos cada uma das linhas obtidas no processamento do arquivo
 			for (int i = 0; i < lines.size(); i++) {
 
-				// Adiciona o valor de initial_addr aos endereços dos labels, se necessário.
-
-				//if (step == 2 && (*initial_addr != 0) && *relocate) {
-				//	for (map<string, string>::iterator it = simbols_list.begin(); it != simbols_list.end(); ++it) {
-				//		stringstream str;
-				//		str << it->second.substr(1, string::npos);
-				//		int second;
-				//		str >> second;
-				//		second += *initial_addr;
-				//		str.clear();
-				//		str << hex << second;
-				//		cout << "SECOND: " << str.str().substr(4, string::npos) << endl;
-				//		it->second = "/" + str.str().substr(4, string::npos);
-				//	}
-				//	*_ci = *initial_addr;
-				//	*relocate = false;
-				//}
-
-
 				if (lines[i].mnemonic == "") { // Comment or blank line (will be ignored)
 					if ((step == 2) && (lines[i].comment != "")) { // Just a comment line
 						do_list(list, lines[i].comment, i); // List comment line if step = 2
@@ -369,15 +353,58 @@ public:
 						do_list(list, lines[i], i, obj_list.back());
 					}
 				} else { // Is label
+
+
+					// Suporte para notação de array
+					bool isArray = lines[i].arg.find("[") != string::npos && lines[i].arg.find("]") != string::npos;
+
 					map<string, string>::iterator it = simbols_list.find(lines[i].arg);
+					if (step == 1 && isArray ) {
+						//stringstream sindex;
+						//sindex << hex << setfill('0') << setw(2) 
+						//	<< lines[i].arg.substr(lines[i].arg.find("[") + 1,
+						//		lines[i].arg.find("]") - lines[i].arg.find("]") + 1);
+						//sindex >> index;
+						//cout << "########INDEX: " << hex << index << endl;
+
+						//index = (uint16_t)*_ci + index;
+						//stringstream str;
+						//str << "/" << hex << setfill('0') << setw(4) << index;
+						//cout << str.str() << endl;
+						//simbols_list[lines[i].arg] = str.str();
+						//simbols_list[lines[i].arg] = "undefined";
+					}
+
 					if ((step == 1) && (it == simbols_list.end())) { // Undefined simbol
 						simbols_list[lines[i].arg] = "undefined";
 					}
+					
 
 					if (step == 2 && it != simbols_list.end()) { //Label already defined, generate obj code
 						stringstream str;
-						str << hex << simbols_list[lines[i].arg].substr(1, string::npos);
-						int arg;
+						if (!isArray)
+							str << hex << simbols_list[lines[i].arg].substr(1, string::npos);
+						else {
+							string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - lines[i].arg.find("[") - 1);
+							stringstream sarg;
+							uint16_t arg;
+							cout << "%%%%%%%% OLABEL: " << oLabel << endl;
+							sarg << hex << simbols_list[oLabel].substr(1, string::npos);
+							sarg >> arg;
+
+							stringstream sindex;
+							sindex << hex << setfill('0') << setw(2) 
+								<< lines[i].arg.substr(lines[i].arg.find("[") + 1,
+									lines[i].arg.find("]") - lines[i].arg.find("]") + 1);
+							sindex >> index;
+							arg += index;
+							str << hex << setfill('0') << setw(4) << arg;
+
+							simbols_list[lines[i].arg] = "/" + str.str();
+
+						}
+
+						uint16_t arg;
 						str >> arg;
 						obj_list.push_back(obj(op << 4*3, arg & 0x0fff));
 						do_list(list, lines[i], i, obj_list.back());
