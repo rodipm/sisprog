@@ -1,4 +1,5 @@
 	@	/3000
 INICIO	+	UM
+
 UM	K	/01
 	#	INICIO
