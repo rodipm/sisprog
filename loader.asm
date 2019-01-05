@@ -29,6 +29,7 @@ LOOP	IO	/02	;GET DATA
 CHECK	IO	/02	;GET DATA
 	+	SUM	;Soma o byte de checksum ao valor da soma atual
 	MM	SUM
+	IO	/05
 	JZ	END	;Se SUM = 0 finaliza
 	CN	/00	;Caso contraio HALT MACHINE
 END	CN	/02	;Ativa modo indireto
