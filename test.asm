@@ -1,6 +1,6 @@
 	@	/1234
 INICIO	LD	ZERO
-	+	ZERO[0]
+	+	ZERO[4]
 	CN	/00
 ZERO	K	/00
 UM	K	/01

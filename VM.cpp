@@ -62,6 +62,7 @@ class VM
 	void (VM::*execute)(void);
 public:
 	VM() {
+		DEBUG = true;
 		// Inicialização do banco de memórias
 		for (int i = 0; i < banks; i++)
 			for (int j = 0; j < bank_size; j++)
