@@ -187,15 +187,32 @@ public:
 
 		// CheckSum
 		BYTE check_sum = 0x00;
-		for (int i = 0; i < str_bin.str().length(); i+=1) {
+		for (int i = 0; i < str_bin.str().length(); i++) {
+			//stringstream ss;
+			//ss << hex << str_bin.str()[i];
+			//BYTE lsb;
+			//BYTE msb;
+			//ss >> lsb;
+			//lsb = lsb & 0x0f;
+			//cout << ss.str() << endl;
+			//ss.str("");
+			//ss << hex << str_bin.str()[i+1];
+			//ss >> msb;
+			//msb = (msb << 4) & 0xf0;
+			//cout << hex << (uint16_t)msb << endl;
+			//check_sum += msb | lsb;
 			stringstream ss;
-			ss << hex << str_bin.str()[i];
-			BYTE tmp;
-			ss >> tmp;
-			check_sum += tmp;
+			ss << str_bin.str()[i];
+			char cByte;
+			ss.read(&cByte, 2);
+			if (cByte == 0x0b)
+				cout << "::???????????????????????????????????????????????????????????????" << endl;
+			cout << "######CBYTE(" << i << "): " << hex << ((uint16_t)cByte & 0x00ff) << endl;
+			check_sum += (uint16_t)cByte & 0x00ff;
+			cout << "######CHECKSUM(" << i << "): " << hex << (uint16_t)check_sum << endl;
 		}
-		
-		check_sum = ~check_sum;
+		check_sum = check_sum & 0x00ff;
+		check_sum = ~check_sum & 0x00ff;
 		check_sum += 0x01;
 
 		str_bin << (char)check_sum; 
@@ -385,7 +402,7 @@ public:
 						if (!isArray)
 							str << hex << simbols_list[lines[i].arg].substr(1, string::npos);
 						else {
-							string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - lines[i].arg.find("[") - 1);
+							string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - (lines[i].arg.find("]") - lines[i].arg.find("[") + 1));
 							stringstream sarg;
 							uint16_t arg;
 							cout << "%%%%%%%% OLABEL: " << oLabel << endl;
