@@ -455,7 +455,6 @@ public:
 
 	// Preloader carregará o loader na memória
 	void preloader() {
-		DEBUG = false;
 		fstream file("loader0.bin", ios_base::in | ios_base::binary);
 		cout << endl << "#############PRELOADER#############" << endl;
 		
@@ -482,7 +481,6 @@ public:
 		file_stream = new fstream("test0.bin", ios_base::in | ios_base::out | ios_base::binary);
 		io_devices[1][0] = file_stream->rdbuf();
 		io_devices[1][1] = file_stream->rdbuf();
-		DEBUG = true;
 	}
 
 	// Inicializações do sistema
