@@ -62,6 +62,7 @@ class VM
 	void (VM::*execute)(void);
 public:
 	VM() {
+		DEBUG = true;
 		// Inicialização do banco de memórias
 		for (int i = 0; i < banks; i++)
 			for (int j = 0; j < bank_size; j++)
@@ -110,7 +111,6 @@ public:
 	~VM() {
 		delete ci_info;
 		delete stream;
-		delete file_stream;
 	}
 
 /***********************************************************************************************************************************************/
@@ -143,17 +143,17 @@ public:
 			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
 			cout << "]" <<  endl;
 			
-			//cout << endl << "##########MEM MAP##########" << endl;
-			//cout << "    ";
-			//for (int i = 0; i <= 0xf; i++)
-			//	cout << hex << setfill('0') << setw(2) << i << " ";
-			//cout << endl << endl;
-			//for (int i = 0; i <= 0xf; i++) {
-			//	cout << hex << setfill('0') << setw(2) << i << "  ";
-			//	for (int j = 0; j <= 0xf; j++)
-			//		cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
-			//	cout << endl;
-			//}
+			cout << endl << "##########MEM MAP##########" << endl;
+			cout << "    ";
+			for (int i = 0; i <= 0xf; i++)
+				cout << hex << setfill('0') << setw(2) << i << " ";
+			cout << endl << endl;
+			for (int i = 0; i <= 0xf; i++) {
+				cout << hex << setfill('0') << setw(2) << i << "  ";
+				for (int j = 0x0100; j <= 0x0100 + 0xf; j++)
+					cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
+				cout << endl;
+			}
 
 		}
 	}
@@ -453,10 +453,31 @@ public:
 		return -1;
 	}
 
+	// Loader carrega arquivo requerido recebendo o nome do arquivo (sem nenhuma numeracao ou extensao)
+	// e numero de arquivos a ser carregados
+	void load(string file, int no) {
+		DEBUG = true;
+		for (int i = 0; i < no; i++) {
+			stringstream name;
+			name << file << i << ".bin";
+			file_stream = new fstream(name.str(), ios_base::in | ios_base::out | ios_base::binary);
+			io_devices[1][0] = file_stream->rdbuf();
+			io_devices[1][1] = file_stream->rdbuf();
+			run(1);
+			cout << "######LOADER (" << i << "): OK" << endl;
+			file_stream->close();
+			delete file_stream;
+
+			running = true;
+		}
+		DEBUG = true;
+
+	}
+
 	// Preloader carregará o loader na memória
 	void preloader() {
 		fstream file("loader0.bin", ios_base::in | ios_base::binary);
-		cout << endl << "#############PRELOADER#############" << endl;
+		if (DEBUG) cout << endl << "#############PRELOADER#############" << endl;
 		
 		stringstream str;
 		char c;
@@ -465,7 +486,7 @@ public:
 			str << hex << setfill('0') << setw(2) << (tmp & 0xff);
 		}
 
-		cout << str.str() << endl;
+		if (DEBUG) cout << str.str() << endl;
 		int addr = 1;	
 		for (int i = 6; i < str.str().length() - 2; i+=2) {
 			char s[] = {str.str()[i], str.str()[i+1]};
@@ -478,9 +499,6 @@ public:
 
 		file.close();
 
-		file_stream = new fstream("test0.bin", ios_base::in | ios_base::out | ios_base::binary);
-		io_devices[1][0] = file_stream->rdbuf();
-		io_devices[1][1] = file_stream->rdbuf();
 	}
 
 	// Inicializações do sistema
@@ -492,7 +510,8 @@ public:
 	
 	// TODO Step mode
 	// Inicia a maquina
-	void run() {
+	void run(int initial = 0x0100) {
+		_ci = initial;
 		while (step < steps && running) {
 			int instructionSize = this->fetch();
 			this->decode();

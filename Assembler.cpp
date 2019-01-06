@@ -43,6 +43,12 @@ struct obj {
 	obj(WORD o, WORD a, bool p = false) : op(o), arg(a), pseudo(p) {}
 };
 
+struct assembled {
+	int size;
+	unsigned int initial_addres;
+	assembled(int s, unsigned int i) : size(s), initial_addres(i) {}
+};
+
 class Assembler
 {
 	// Tabela de mnemonicos
@@ -53,12 +59,14 @@ class Assembler
 	int *initial_addr;
 	int *block_size;
 	int *file_number;
+	int *begin_addr;
 	string file_name;
 	uint16_t index;
 	
 public:
 	Assembler(){
 		initial_addr = new int;
+		begin_addr = new int;
 		_ci = new int;
 		file_number = new int;
 		block_size = new int;
@@ -86,6 +94,7 @@ public:
 		delete _ci;
 		delete block_size;
 		delete file_number;
+		delete begin_addr;
 	}
 	
 	vector<file_line> processFile(string file) {
@@ -232,7 +241,7 @@ public:
 		*file_number += 1;
 	}
 
-	void Assemble(string file) {
+	assembled Assemble(string file) {
 
 		file_name = file;
 		*file_number = 0;
@@ -313,6 +322,8 @@ public:
 						str << hex << lines[i].arg.substr(1, string::npos);
 						str >> *initial_addr;
 						*_ci = *initial_addr;
+						if (*file_number == 0)
+							*begin_addr = *initial_addr;
 						continue;
 					} else if (lines[i].mnemonic == "$") { // ARRAY
 						stringstream str;
@@ -450,6 +461,7 @@ public:
 			cout << list[i] << endl;
 		}
 		
+		return assembled(*file_number, *begin_addr);
 	}
 };
 
