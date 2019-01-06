@@ -1,12 +1,21 @@
-	@	/0001	;Endereço inicial do loader
+	@	/0002	;Endereço inicial do loader
 INIT	IO	/02	;GET DATA - Device 2 (file)
 	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+	LD	/0000
+	JZ	SALV1
+	JP	SUM1
+SALV1	LD	IADDR
 	MM	START	;Salva novamente para termos o endereço ao final
+SUM1	LD	IADDR
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
 	IO	/02	;GET DATA
 	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+	JZ	SALV2
+	JP	SUM2
+SALV2	LD	IADDR2
 	MM	START2
+SUM2	LD	IADDR2
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
 	IO	/02	;GET DATA
@@ -31,8 +40,15 @@ CHECK	IO	/02	;GET DATA
 	MM	SUM
 	JZ	END	;Se SUM = 0 finaliza
 	CN	/00	;Caso contraio HALT MACHINE
-END	CN	/02	;Ativa modo indireto
-			;JP	START	;Salta para o inicio do programa carregado
+END	LD	/0001	;Load no numero de arquivos
+	-	/0000	;Subtrai a iteracao atual
+	JZ	RUN	;Se for o ultimo arquivo, executa-o
+	LD	/0000	
+	+	ONE
+	MM	/0000	;salva a iteração atual
+	CN	/00
+	CN	/02	;Ativa modo indireto
+RUN	JP	START	;Salta para o inicio do programa carregado
 	CN	/00	;Halt Machine
 IADDR	K	/00
 IADDR2	K	/00

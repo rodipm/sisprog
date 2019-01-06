@@ -8,11 +8,11 @@ int main(int argc, char** argv)
 {
 	Assembler *as = new Assembler();
 	as->Assemble("loader.asm");
-	as->Assemble("test.asm");
-
+	assembled obj = as->Assemble("test.asm");
 	VM *vm = new VM();
 	vm->start();
-	vm->run();
+	vm->load("test", obj.size);
+	vm->run(obj.initial_addres & 0xffff);
 	
 	delete vm;
 	delete as;
