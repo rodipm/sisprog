@@ -5,11 +5,16 @@
 using namespace std;
 
 int main() {
-	char check = 0x00; 
-	stringstream ss;
-	ss << (char)0xff;
-	ss >> check;
-	cout << hex << ss.str() << endl;	
-	cout << hex << ((unsigned short int)check & 0x00ff + 1) << endl;
+	iostream *stream = new iostream(nullptr);
+	stream->rdbuf(nullptr);
+	streambuf *io_device;
+	io_device = cin.rdbuf();
+	stream->rdbuf(io_device);
+	char buffer[1];
+	stream->read(buffer, 1);
+	cout << buffer[0] << endl;
+	cin.ignore(256, '\n');
+	stream->read(buffer, 1);
+	cout << buffer[0] << endl;
 	return 0;
 }

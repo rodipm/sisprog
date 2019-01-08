@@ -62,7 +62,6 @@ class VM
 	void (VM::*execute)(void);
 public:
 	VM() {
-		DEBUG = true;
 		// Inicialização do banco de memórias
 		for (int i = 0; i < banks; i++)
 			for (int j = 0; j < bank_size; j++)
@@ -360,10 +359,16 @@ public:
 						stream->rdbuf(io_devices[DEV-1][0]);
 					}
 					char buff[1];
-					stream->read(buff, 1);
-					// Apenas fará sentido se o input for o stdin.
-					if (DEV == 1)
-						cin.ignore(120, '\n');
+					if (DEV == 1) {
+						stream->read(buff, 1);
+						if (buff[0] >= 48 && buff[0] < 97)
+							buff[0] -= 48;
+						else if (buff[0] >= 97)
+							buff[0] -= 97 - 10;
+					}
+					else
+						stream->read(buff, 1);
+					stream->rdbuf(nullptr);
 					_acc = (int8_t)buff[0];
 				}
 				else {
@@ -456,7 +461,6 @@ public:
 	// Loader carrega arquivo requerido recebendo o nome do arquivo (sem nenhuma numeracao ou extensao)
 	// e numero de arquivos a ser carregados
 	void load(string file, int no) {
-		DEBUG = true;
 		for (int i = 0; i < no; i++) {
 			stringstream name;
 			name << file << i << ".bin";
@@ -467,11 +471,7 @@ public:
 			cout << "######LOADER (" << i << "): OK" << endl;
 			file_stream->close();
 			delete file_stream;
-
-			running = true;
 		}
-		DEBUG = true;
-
 	}
 
 	// Preloader carregará o loader na memória
@@ -505,13 +505,14 @@ public:
 	void start() {
 		preloader();
 		step = 0;
-		running = true;
 	}
 	
 	// TODO Step mode
 	// Inicia a maquina
-	void run(int initial = 0x0100) {
+	void run(int initial = 0, bool deb = false) {
 		_ci = initial;
+		running = true;
+		DEBUG = deb;
 		while (step < steps && running) {
 			int instructionSize = this->fetch();
 			this->decode();
