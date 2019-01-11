@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	assembled obj = as->Assemble("n2.asm");
 	VM *vm = new VM();
 	vm->start();
-	vm->load("n2", obj.size);
+	vm->load(obj.name, obj.size);
 	vm->run(obj.initial_addres & 0xffff, true);
 	
 	delete vm;

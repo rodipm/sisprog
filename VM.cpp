@@ -198,21 +198,21 @@ public:
 	void CN() {
 		switch((_ri & 0x0f00) >> 8) {
 			case 0x0: // HLT
-				cout << "Machine is halted" << endl;
+				if(DEBUG) cout << "Machine is halted" << endl;
 				running = false;
 				break;
 			case 0x1: // RI
-				cout << "Return from interrupt" << endl;
+				//cout << "Return from interrupt" << endl;
 				break;
 			case 0x2: // IN
-				cout << "Indirect mode ON" << endl;
+				//cout << "Indirect mode ON" << endl;
 				indirect = true;
 				break;
 			case 0x3: // NOP;
-				cout << "NOP" << endl;
+				//cout << "NOP" << endl;
 				break;
 			default:
-				cout << "Fail!" << endl;
+				cout << "Instrução invalida!" << endl;
 				break;
 		}	
 	}
@@ -360,11 +360,13 @@ public:
 					}
 					char buff[1];
 					if (DEV == 1) {
+						cout << "Input: ";
 						stream->read(buff, 1);
 						if (buff[0] >= 48 && buff[0] < 97)
 							buff[0] -= 48;
 						else if (buff[0] >= 97)
 							buff[0] -= 97 - 10;
+						cin.ignore(100, '\n');
 					}
 					else
 						stream->read(buff, 1);
@@ -468,7 +470,6 @@ public:
 			io_devices[1][0] = file_stream->rdbuf();
 			io_devices[1][1] = file_stream->rdbuf();
 			run(1);
-			cout << "######LOADER (" << i << "): OK" << endl;
 			file_stream->close();
 			delete file_stream;
 		}

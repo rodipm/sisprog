@@ -46,7 +46,11 @@ struct obj {
 struct assembled {
 	int size;
 	unsigned int initial_addres;
-	assembled(int s, unsigned int i) : size(s), initial_addres(i) {}
+	string name;
+	assembled(int s, unsigned int i, string n) 
+		: size(s)
+		, initial_addres(i) 
+		, name(n.substr(0, n.length() -4 )) {}
 };
 
 class Assembler
@@ -214,11 +218,11 @@ public:
 			ss << str_bin.str()[i];
 			char cByte;
 			ss.read(&cByte, 2);
-			if (cByte == 0x0b)
-				cout << "::???????????????????????????????????????????????????????????????" << endl;
-			cout << "######CBYTE(" << i << "): " << hex << ((uint16_t)cByte & 0x00ff) << endl;
+			//if (cByte == 0x0b)
+				//cout << "::???????????????????????????????????????????????????????????????" << endl;
+			//cout << "######CBYTE(" << i << "): " << hex << ((uint16_t)cByte & 0x00ff) << endl;
 			check_sum += (uint16_t)cByte & 0x00ff;
-			cout << "######CHECKSUM(" << i << "): " << hex << (uint16_t)check_sum << endl;
+			//cout << "######CHECKSUM(" << i << "): " << hex << (uint16_t)check_sum << endl;
 		}
 		check_sum = check_sum & 0x00ff;
 		check_sum = ~check_sum & 0x00ff;
@@ -227,8 +231,8 @@ public:
 		str_bin << (char)check_sum; 
 		str << endl << hex << (WORD)check_sum << endl;
 
-		cout << "+++++++++++ HEX OBJ(" << *file_number << ") +++++++++++" << endl << str.str() << endl;
-		cout << "+++++++++++ BIN OBJ(" << *file_number << ") +++++++++++" << endl << str_bin.str() << endl;
+		//cout << "+++++++++++ HEX OBJ(" << *file_number << ") +++++++++++" << endl << str.str() << endl;
+		//cout << "+++++++++++ BIN OBJ(" << *file_number << ") +++++++++++" << endl << str_bin.str() << endl;
 		
 		bin_file << str_bin.rdbuf();
 		
@@ -416,7 +420,7 @@ public:
 							string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - (lines[i].arg.find("]") - lines[i].arg.find("[") + 1));
 							stringstream sarg;
 							uint16_t arg;
-							cout << "%%%%%%%% OLABEL: " << oLabel << endl;
+							//cout << "%%%%%%%% OLABEL: " << oLabel << endl;
 							sarg << hex << simbols_list[oLabel].substr(1, string::npos);
 							sarg >> arg;
 
@@ -461,7 +465,7 @@ public:
 			cout << list[i] << endl;
 		}
 		
-		return assembled(*file_number, *begin_addr);
+		return assembled(*file_number, *begin_addr, file_name);
 	}
 };
 
