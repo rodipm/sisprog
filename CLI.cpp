@@ -2,8 +2,8 @@
 #include <cstdio>
 #include <dirent.h>
 #include <map>
-#include "VM.cpp"
-#include "Assembler.cpp"
+#include "./src/VM.cpp"
+#include "./src/Assembler.cpp"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -73,7 +73,6 @@ void run (string program) {
 	}
 	as->Assemble("loader.asm");
 	assembled prog = as->Assemble(program);
-	cout << "ok" << endl;
 	vm->start();
 	vm->load(prog.name, prog.size);
 	vm->run(prog.initial_addres & 0xffff, true);
@@ -141,7 +140,7 @@ void deleteFiles () {
 	DIR *pdir = nullptr;
 	struct dirent *pent = nullptr;
 
-	pdir = opendir(".");
+	pdir = opendir("./src/");
 	if (pdir == nullptr) exit(1);
 
 	for (map<string, bool>::iterator it = programs.begin(); it != programs.end(); ++it)
@@ -152,7 +151,7 @@ void deleteFiles () {
 				string name(pent->d_name);
 
 				if (name.find(it->first.substr(0, it->first.length() - 4)) != string::npos)	
-					if(remove(name.c_str()))
+					if(remove(name.insert(0, "./src/").c_str()))
 						cout << "Erro ao deletar o programa " << name << "." << endl;
 			}
 		}
@@ -161,10 +160,10 @@ void deleteFiles () {
 int main (int argc, char **argv) {
 	client = "rpm";	
 	dir();
-	//welcome();
-	//while (!login()) {
-	//	cout << endl << "Usuário ou senha incorretos!" << endl << endl;
-	//}	
+	welcome();
+	while (!login()) {
+		cout << endl << "Usuário ou senha incorretos!" << endl << endl;
+	}	
 	
 	vm = new VM();
 	as = new Assembler();

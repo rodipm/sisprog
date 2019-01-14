@@ -1,4 +1,3 @@
-	@	/0555
-INICIO	IO	/01
+S	@	/5555
 	CN	/00
-	#	INICIO
+	#	S

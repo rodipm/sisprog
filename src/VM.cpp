@@ -32,7 +32,7 @@ class VM
 	// Registradores
 	int8_t _acc;
 	uint8_t _cb;
-	uint16_t _ri, _ci;
+	uint16_t _ri, _ci, _initial;
 
 	// Tabela de tamanhos das instruções
 	const int instruction_sizes[0xd] = {2,2,2,1,2,2,2,2,2,2,2,1,1};
@@ -72,6 +72,7 @@ public:
 		_cb  = 0;
 		_ri = 0;
 		_ci = 1;
+		_initial = 0;
 
 		// Demais inicializações
 		running = false;
@@ -149,8 +150,8 @@ public:
 			cout << endl << endl;
 			for (int i = 0; i <= 0xf; i++) {
 				cout << hex << setfill('0') << setw(2) << i << "  ";
-				for (int j = 0x0100; j <= 0x0100 + 0xf; j++)
-					cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_cb][i << 4 | j] << " ";
+				for (int j = 0; j <= 0xf; j++)
+					cout << hex << setfill('0') << setw(2) << (uint16_t)mem[_initial >> 12][(_initial & 0x0fff) + i*0xf + j] << " ";
 				cout << endl;
 			}
 
@@ -465,7 +466,7 @@ public:
 	void load(string file, int no) {
 		for (int i = 0; i < no; i++) {
 			stringstream name;
-			name << file << i << ".bin";
+			name << "./src/" + file << i << ".bin";
 			file_stream = new fstream(name.str(), ios_base::in | ios_base::out | ios_base::binary);
 			io_devices[1][0] = file_stream->rdbuf();
 			io_devices[1][1] = file_stream->rdbuf();
@@ -477,7 +478,7 @@ public:
 
 	// Preloader carregará o loader na memória
 	void preloader() {
-		fstream file("loader0.bin", ios_base::in | ios_base::binary);
+		fstream file("./src/loader0.bin", ios_base::in | ios_base::binary);
 		if (DEBUG) cout << endl << "#############PRELOADER#############" << endl;
 		
 		stringstream str;
@@ -511,10 +512,12 @@ public:
 	// TODO Step mode
 	// Inicia a maquina
 	void run(int initial = 0, bool deb = false) {
-		_ci = initial;
+		_initial = initial;
+		_ci = initial & 0x0fff;
+		_cb = initial >> 12;
 		running = true;
 		DEBUG = deb;
-		while (step < steps && running) {
+		while (running) {
 			int instructionSize = this->fetch();
 			this->decode();
 			(this->*execute)();

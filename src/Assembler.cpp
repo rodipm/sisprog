@@ -59,22 +59,17 @@ class Assembler
 	mnemonic mnemonic_table[0xd];
 
 	// Contador de instruções
-	int *_ci;
-	int *initial_addr;
-	int *block_size;
-	int *file_number;
-	int *begin_addr;
+	int _ci;
+	int initial_addr;
+	int block_size;
+	int file_number;
+	int begin_addr;
 	string file_name;
 	uint16_t index;
 	
 public:
 	Assembler(){
-		initial_addr = new int;
-		begin_addr = new int;
-		_ci = new int;
-		file_number = new int;
-		block_size = new int;
-		*block_size = *initial_addr = *file_number = 0;
+		block_size = initial_addr = file_number = 0;
 		index = 0;
 
 		// Inicialização da tabela de mnemonicos
@@ -94,11 +89,6 @@ public:
 	}
 
 	~Assembler() {
-		delete initial_addr;
-		delete _ci;
-		delete block_size;
-		delete file_number;
-		delete begin_addr;
 	}
 	
 	vector<file_line> processFile(string file) {
@@ -164,7 +154,7 @@ public:
 	void do_list(vector<string> &list, file_line &line, int lineno, obj &o)
 	{
 		stringstream str;
-		str << hex << setfill('0') << setw(4) << *_ci << "\t" << ((o.op | o.arg) & 0x00ff ? (o.op | o.arg) : (o.op | o.arg) >> 8) << "\t" << dec << lineno + 1 << "\t" << line.label + "\t" +  line.mnemonic + "\t" + line.arg + "\t" + line.comment << endl;
+		str << hex << setfill('0') << setw(4) << _ci << "\t" << ((o.op | o.arg) & 0x00ff ? (o.op | o.arg) : (o.op | o.arg) >> 8) << "\t" << dec << lineno + 1 << "\t" << line.label + "\t" +  line.mnemonic + "\t" + line.arg + "\t" + line.comment << endl;
 		list.push_back(str.str());
 	}
 
@@ -174,13 +164,13 @@ public:
 		if (obj_list.empty()) return;
 
 		stringstream str, str_bin;
-		str << hex << *file_number;
-		ofstream hex_file (file_name.substr(0, file_name.length() - 4) + str.str() + ".o", ofstream::out);
-		ofstream bin_file (file_name.substr(0, file_name.length() - 4) + str.str() + ".bin", ofstream::out);
+		str << hex << file_number;
+		ofstream hex_file ("./src/" + file_name.substr(0, file_name.length() - 4) + str.str() + ".o", ofstream::out);
+		ofstream bin_file ("./src/" + file_name.substr(0, file_name.length() - 4) + str.str() + ".bin", ofstream::out);
 		str.str("");
 
-		str << hex << setfill('0') << setw(2) << ((*initial_addr >> 8) & 0x00ff) << " " << hex << setfill('0') << setw(2) << (*initial_addr & 0x00ff) << " " << hex << setfill('0') << setw(2) << (*block_size & 0x00ff) << endl;
-		str_bin << (char)(*initial_addr >> 8) << (char)(*initial_addr & 0x00ff) << (char)(*block_size & 0x00ff);
+		str << hex << setfill('0') << setw(2) << ((initial_addr >> 8) & 0x00ff) << " " << hex << setfill('0') << setw(2) << (initial_addr & 0x00ff) << " " << hex << setfill('0') << setw(2) << (block_size & 0x00ff) << endl;
+		str_bin << (char)(initial_addr >> 8) << (char)(initial_addr & 0x00ff) << (char)(block_size & 0x00ff);
 
 		for (int i = 0; i < obj_list.size(); i++) {
 			str << hex << setfill('0') << setw(2) << (((obj_list[i].op | obj_list[i].arg) & 0xff00) >> 8) << " ";
@@ -196,7 +186,7 @@ public:
 		}
 		
 		obj_list.clear();
-		*block_size = 0;
+		block_size = 0;
 
 		// CheckSum
 		BYTE check_sum = 0x00;
@@ -231,8 +221,8 @@ public:
 		str_bin << (char)check_sum; 
 		str << endl << hex << (WORD)check_sum << endl;
 
-		//cout << "+++++++++++ HEX OBJ(" << *file_number << ") +++++++++++" << endl << str.str() << endl;
-		//cout << "+++++++++++ BIN OBJ(" << *file_number << ") +++++++++++" << endl << str_bin.str() << endl;
+		//cout << "+++++++++++ HEX OBJ(" << file_number << ") +++++++++++" << endl << str.str() << endl;
+		//cout << "+++++++++++ BIN OBJ(" << file_number << ") +++++++++++" << endl << str_bin.str() << endl;
 		
 		bin_file << str_bin.rdbuf();
 		
@@ -242,16 +232,16 @@ public:
 		hex_file.close();
 		str.str("");
 		str_bin.str("");
-		*file_number += 1;
+		file_number += 1;
 	}
 
 	assembled Assemble(string file) {
 
 		file_name = file;
-		*file_number = 0;
-		*_ci = 0;
-		*initial_addr = 0;
-		*block_size = 0;
+		file_number = 0;
+		_ci = 0;
+		initial_addr = 0;
+		block_size = 0;
 		
 		// Processa todas as linhas do arquivo
 		vector<file_line> lines = processFile(file);
@@ -268,7 +258,7 @@ public:
 
 		// Trata-se de um assembler de dois passos, logo teremos de iterar duas vezes
 		for (int step = 1; step < 3; step++) {
-			*_ci = 0;
+			_ci = 0;
 			// Analizamos cada uma das linhas obtidas no processamento do arquivo
 			for (int i = 0; i < lines.size(); i++) {
 
@@ -285,11 +275,11 @@ public:
 					if (lines[i].label != "") { // Has label
 						if (simbols_list.find(lines[i].label) == simbols_list.end()) { // Create new simbol 
 							stringstream str;
-							str << "/" << hex << setfill('0') << setw(4) << *_ci;
+							str << "/" << hex << setfill('0') << setw(4) << _ci;
 							simbols_list[lines[i].label] = str.str();
 						} else if (simbols_list[lines[i].label] == "undefined") { // Simbol undefined
 							stringstream str;
-							str << "/" << hex << setfill('0') << setw(4) << *_ci;
+							str << "/" << hex << setfill('0') << setw(4) << _ci;
 							simbols_list[lines[i].label] = str.str();
 						} else {
 							//TODO: Better Errors...
@@ -324,10 +314,10 @@ public:
 
 						stringstream str;
 						str << hex << lines[i].arg.substr(1, string::npos);
-						str >> *initial_addr;
-						*_ci = *initial_addr;
-						if (*file_number == 0)
-							*begin_addr = *initial_addr;
+						str >> initial_addr;
+						_ci = initial_addr;
+						if (file_number == 0)
+							begin_addr = initial_addr;
 						continue;
 					} else if (lines[i].mnemonic == "$") { // ARRAY
 						stringstream str;
@@ -335,7 +325,7 @@ public:
 						int s_arr;
 						str >> s_arr;
 						s_arr &= 0x0fff;
-						*_ci += s_arr;
+						_ci += s_arr;
 						if (step == 2)
 							do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
 						continue;
@@ -352,10 +342,10 @@ public:
 						if (step == 2) {
 							obj_list.push_back(obj((k << 8) & 0xf000, (k & 0x000f) << 8, true));
 							do_list(list, lines[i], i, obj_list.back());
-							*block_size += 1;
+							block_size += 1;
 							continue;
 						}
-						*_ci += 1;
+						_ci += 1;
 					} else if (lines[i].mnemonic == "#") { // END
 						if (step == 2) {
 							do_create_obj(obj_list);
@@ -399,7 +389,7 @@ public:
 						//sindex >> index;
 						//cout << "########INDEX: " << hex << index << endl;
 
-						//index = (uint16_t)*_ci + index;
+						//index = (uint16_t)_ci + index;
 						//stringstream str;
 						//str << "/" << hex << setfill('0') << setw(4) << index;
 						//cout << str.str() << endl;
@@ -443,9 +433,9 @@ public:
 					}
 				}	
 
-				*_ci += size;
+				_ci += size;
 				if (step == 2)
-					*block_size += size;
+					block_size += size;
 			}
 		}
 
@@ -465,7 +455,7 @@ public:
 			cout << list[i] << endl;
 		}
 		
-		return assembled(*file_number, *begin_addr, file_name);
+		return assembled(file_number, begin_addr, file_name);
 	}
 };
 

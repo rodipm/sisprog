@@ -1,9 +1,0 @@
-	@	/0600
-START	IO	/01
-	MM	DATA[0]
-	IO	/01
-	MM	DATA[1]
-	+	DATA[0]
-	CN	/00
-DATA	$	/02
-	#	START
