@@ -1,21 +1,22 @@
-	@	/0800	;Endereço inicial do loader
-INIT	IO	/02	;GET DATA - Device 2 (file)
+	@	/0050	;Endereço inicial do dumper 
+INIT	IO	/01	;GET DATA - Device 1 (stdin) - Primeiro Byte
 	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
-	MM	START	;Salva novamente para termos o endereço ao final
+	IO	/06	;PUT DATA - Device 2 (file)
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
-	IO	/02	;GET DATA
+	IO	/01	;GET DATA - Device 1 (stdin) - Segundo Byte
 	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
-	MM	START2
+	IO	/06	;PUT DATA - Device 2 (file)
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
-	IO	/02	;GET DATA
+	IO	/01	;GET DATA - Device 1 (stdin) - Tamanho do programa
 	MM	SIZE	;Salva o tamanho do programa (em bytes)
+	IO	/06	;PUT DATA - Device 2 (file)
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
-LOOP	IO	/02	;GET DATA
-	CN	/02	;Ativa modo indireto
-	MM	IADDR	;Guarda (indiretamente) o byte lido no endereço atual 
+LOOP	CN	/02	;Ativa modo indireto
+	LD	IADDR	;Carrega (indiretamente) o byte lido do endereço atual 
+	IO	/06	;PUT DATA - Device 2 (file)
 	+	SUM	;Soma o byte para checksum
 	MM	SUM
 	LD	IADDR2	;Carrega o endereço atual
@@ -26,18 +27,16 @@ LOOP	IO	/02	;GET DATA
 	MM	SIZE	;Salva
 	JZ	CHECK	;Se SIZE = 0 pula para o checksum
 	JP	LOOP	;Caso contrario, continua lendo
-CHECK	IO	/02	;GET DATA
-	+	SUM	;Soma o byte de checksum ao valor da soma atual
-	MM	SUM
-	JZ	END	;Se SUM = 0 finaliza
-	CN	/00	;Caso contraio HALT MACHINE
-END	CN	/02	;Ativa modo indireto
-			;JP	START	;Salta para o inicio do programa carregado
+CHECK	LD	COMP	;Carrega FF no acumulador
+	-	SUM	;Efetua FF - SUM
+	+	ONE	;Soma um
+	IO	/06	;PUT DATA - Device 2 (file)
 	CN	/00	;Halt Machine
 IADDR	K	/00
 IADDR2	K	/00
 SIZE	K	/00
 ONE	K	/01
+COMP	K	/FF
 START	K	/00
 START2	K	/00
 SUM	K	/00

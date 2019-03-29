@@ -214,6 +214,8 @@ public:
 				break;
 			default:
 				cout << "Instrução invalida!" << endl;
+				cout << "_ri: " << hex << _ri << endl;
+				exit(1);
 				break;
 		}	
 	}
@@ -337,9 +339,12 @@ public:
 			else{
 				if (io_devices[DEV-1][1] != nullptr) {
 					stream->rdbuf(io_devices[DEV-1][1]);
-					stream->write(str.str().c_str(), 2);
+					char value = (char)_acc;
+					stream->write(&value, 1);
+					cout << "########WRITING " << value << endl;
 				}
 			}
+			stream->rdbuf(nullptr);
 		}
 
 		// ENABLE INTERRUPT
@@ -359,15 +364,17 @@ public:
 					if (stream->rdbuf() == nullptr) {
 						stream->rdbuf(io_devices[DEV-1][0]);
 					}
-					char buff[1];
+					char buff[3];
 					if (DEV == 1) {
 						cout << "Input: ";
-						stream->read(buff, 1);
-						if (buff[0] >= 48 && buff[0] < 97)
-							buff[0] -= 48;
-						else if (buff[0] >= 97)
-							buff[0] -= 97 - 10;
-						cin.ignore(100, '\n');
+						stream->read(buff, 3);
+						for (int i = 0; i < 2; i++) {
+							if (buff[i] >= 48 && buff[i] < 97)
+								buff[i] -= 48;
+							else if (buff[i] >= 97)
+								buff[i] -= 97 - 10;
+						}
+						buff[0] = (buff[0] & 0x0f) << 4 | (buff[1] & 0x0f);
 					}
 					else
 						stream->read(buff, 1);
@@ -456,9 +463,24 @@ public:
 				break;
 			default:
 				cout << "Instrução inválida" << endl;
+				cout << "_ri: " << hex << _ri << endl;
 				break;
 		}
 		return -1;
+	}
+
+	// Dumper guarda parte da memória em um arquivo escolhido
+	void dump(string file) {
+
+		stringstream name;
+		name << file + ".dmp.bin";
+		file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
+		io_devices[1][0] = file_stream->rdbuf();
+		io_devices[1][1] = file_stream->rdbuf();
+		cout << "#####RUNNING DUMPER#####" << endl;
+		run(0x50, true);
+		file_stream->close();
+		delete file_stream;
 	}
 
 	// Loader carrega arquivo requerido recebendo o nome do arquivo (sem nenhuma numeracao ou extensao)
@@ -500,6 +522,7 @@ public:
 		}
 
 		file.close();
+		if (DEBUG) cout << endl << "#############END-PRELOADER#############" << endl;
 
 	}
 

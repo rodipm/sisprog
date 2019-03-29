@@ -62,6 +62,7 @@ void help () {
 	cout << "$DIR" << endl << "\t" << "Exibe lista de programas do usuário atual" << endl;
 	cout << "$DEL <nome>" << endl << "\t" << "Remove do sistema de programação o acesso ao programa especificado" << endl;
 	cout << "$RUN <nome>" << endl << "\t" << "Inicializa a maquina virtual e executa o programa especificado" << endl;
+	cout << "$DUMP <nome>" << endl << "\t" << "Executa o programa Dumper" << endl;
 	cout << "$END" << endl << "\t" << "Finaliza a operação do CLI e deleta os arquivos necessários na máquina hospedeira" << endl;
 	cout << endl << endl;
 }
@@ -118,6 +119,13 @@ void ASM (string program) {
 		programs[program] = true;
 }
 
+void DUMP (string name) {
+	assembled prog = as->Assemble("dumper.asm");
+	vm->start();
+	vm->load(prog.name, prog.size);
+	vm->dump(name);
+}
+
 bool interpret (string command) {
 	if (command.compare("$HELP") == 0)
 		help();
@@ -131,6 +139,8 @@ bool interpret (string command) {
 		return false;
 	else if (command.find("$ASM") != string::npos)
 		ASM(command.substr(command.find(' ') + 1, string::npos));
+	else if (command.find("$DUMP") != string::npos)
+		DUMP(command.substr(command.find(' ') + 1, string::npos));
 	else
 		cout << "Comando inválido!" << endl;
 	return true;
