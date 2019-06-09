@@ -91,10 +91,14 @@ public:
 	~Assembler() {
 	}
 	
-	vector<file_line> processFile(string file) {
+	vector<file_line> processFile(string file, string client) {
 		// Abre o arquivo .asm para ser lido
+		stringstream dir;
+		if (client != "") 
+			dir << "./usr/" << client << "/src/";
+		dir << file;
 		fstream input;
-	       	input.open(file, ios_base::in);
+	       	input.open(dir.str(), ios_base::in);
 
 		if (!input)
 			exit(1);
@@ -159,14 +163,23 @@ public:
 	}
 
 
-	void do_create_obj(vector<obj> &obj_list) {
+	void do_create_obj(vector<obj> &obj_list, string client) {
 
 		if (obj_list.empty()) return;
 
 		stringstream str, str_bin;
 		str << hex << file_number;
-		ofstream hex_file ("./src/" + file_name.substr(0, file_name.length() - 4) + str.str() + ".o", ofstream::out);
-		ofstream bin_file ("./src/" + file_name.substr(0, file_name.length() - 4) + str.str() + ".bin", ofstream::out);
+		stringstream dir;
+		dir << ".";
+		if (client != "")
+			dir << "/usr/" << client;
+		dir << "/bin/" << file_name.substr(0, file_name.length() - 4) << str.str();
+		stringstream hex_dir;
+		stringstream bin_dir;
+		hex_dir << dir.str() << ".o";
+		bin_dir << dir.str() << ".bin";
+		ofstream hex_file (hex_dir.str(), ofstream::out);
+		ofstream bin_file (bin_dir.str(), ofstream::out);
 		str.str("");
 
 		str << hex << setfill('0') << setw(2) << ((initial_addr >> 8) & 0x00ff) << " " << hex << setfill('0') << setw(2) << (initial_addr & 0x00ff) << " " << hex << setfill('0') << setw(2) << (block_size & 0x00ff) << endl;
@@ -235,7 +248,7 @@ public:
 		file_number += 1;
 	}
 
-	assembled Assemble(string file) {
+	assembled Assemble(string file, string client = "") {
 
 		file_name = file;
 		file_number = 0;
@@ -244,7 +257,7 @@ public:
 		block_size = 0;
 		
 		// Processa todas as linhas do arquivo
-		vector<file_line> lines = processFile(file);
+		vector<file_line> lines = processFile(file, client);
 
 		// As linhas pós processadas serão armazenadas em um vector
 		vector<string> list;		
@@ -308,7 +321,7 @@ public:
 
 						if (step == 2) {
 							if (!obj_list.empty())
-								do_create_obj(obj_list);
+								do_create_obj(obj_list, client);
 							do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
 						}
 
@@ -348,7 +361,7 @@ public:
 						_ci += 1;
 					} else if (lines[i].mnemonic == "#") { // END
 						if (step == 2) {
-							do_create_obj(obj_list);
+							do_create_obj(obj_list, client);
 							do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
 							continue;
 
@@ -440,7 +453,7 @@ public:
 		}
 
 		// Gera código objeto final (se houver)
-		do_create_obj(obj_list);	
+		do_create_obj(obj_list, client);
 
 		cout << endl << "LABELS" << "\t" << "VALUE" << endl;
 		cout << "==========================" << endl;
@@ -455,7 +468,9 @@ public:
 			cout << list[i] << endl;
 		}
 		
+		cout << "BREAKS HERE?" << endl;
 		return assembled(file_number, begin_addr, file_name);
+
 	}
 };
 

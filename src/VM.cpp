@@ -470,10 +470,10 @@ public:
 	}
 
 	// Dumper guarda parte da memória em um arquivo escolhido
-	void dump(string file) {
+	void dump(string file, string client) {
 
 		stringstream name;
-		name << file + ".dmp.bin";
+		name << "./usr/" << client << "/bin/" << file << ".dmp.bin";
 		file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
 		io_devices[1][0] = file_stream->rdbuf();
 		io_devices[1][1] = file_stream->rdbuf();
@@ -485,10 +485,14 @@ public:
 
 	// Loader carrega arquivo requerido recebendo o nome do arquivo (sem nenhuma numeracao ou extensao)
 	// e numero de arquivos a ser carregados
-	void load(string file, int no) {
+	void load(string file, int no, string client = "") {
 		for (int i = 0; i < no; i++) {
 			stringstream name;
-			name << "./src/" + file << i << ".bin";
+			if (client != "")
+				name << "./usr/" << client;
+			else
+				name << ".";
+			name << "/bin/" + file << i << ".bin";
 			file_stream = new fstream(name.str(), ios_base::in | ios_base::out | ios_base::binary);
 			io_devices[1][0] = file_stream->rdbuf();
 			io_devices[1][1] = file_stream->rdbuf();
@@ -500,7 +504,7 @@ public:
 
 	// Preloader carregará o loader na memória
 	void preloader() {
-		fstream file("./src/loader0.bin", ios_base::in | ios_base::binary);
+		fstream file("./bin/loader0.bin", ios_base::in | ios_base::binary);
 		if (DEBUG) cout << endl << "#############PRELOADER#############" << endl;
 		
 		stringstream str;

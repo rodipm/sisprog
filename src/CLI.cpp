@@ -75,17 +75,23 @@ void run (string program) {
 		return;
 	}
 	as->Assemble("loader.asm");
-	assembled prog = as->Assemble(program);
+	assembled prog = as->Assemble(program, client);
+	cout << "BREAKS HERE? - assemble" << endl;
 	vm->start();
-	vm->load(prog.name, prog.size);
+	cout << "BREAKS HERE? - start" << endl;
+	vm->load(prog.name, prog.size, client);
+	cout << "BREAKS HERE? - load" << endl;
 	vm->run(prog.initial_addres & 0xffff, true);
+	cout << "BREAKS HERE? - run" << endl;
 }
 
 void dir (bool show = false) {
 	DIR *pdir = nullptr;
 	struct dirent *pent = nullptr;
-
-	pdir = opendir(".");
+	stringstream dir;
+	dir << "./usr/" << client << "/src";
+	cout << "DIRECTORY: " << dir.str() << endl;
+	pdir = opendir(dir.str().c_str());
 	if (pdir == nullptr) exit(1);
 
 	while (pent = readdir(pdir)) {
@@ -125,7 +131,7 @@ void DUMP (string name) {
 	assembled prog = as->Assemble("dumper.asm");
 	vm->start();
 	vm->load(prog.name, prog.size);
-	vm->dump(name);
+	vm->dump(name, client);
 }
 
 bool interpret (string command) {
@@ -148,11 +154,16 @@ bool interpret (string command) {
 	return true;
 }
 
-void deleteFiles () {
+void deleteFiles (string client = "") {
 	DIR *pdir = nullptr;
 	struct dirent *pent = nullptr;
 
-	pdir = opendir("./src/");
+	stringstream dir;
+	dir << ".";
+	if (client != "") 
+		dir << "/usr/" << client;
+	dir << "/bin/";
+	pdir = opendir(dir.str().c_str());
 	if (pdir == nullptr) exit(1);
 
 	for (map<string, bool>::iterator it = programs.begin(); it != programs.end(); ++it)
@@ -163,7 +174,7 @@ void deleteFiles () {
 				string name(pent->d_name);
 
 				if (name.find(it->first.substr(0, it->first.length() - 4)) != string::npos)	
-					if(remove(name.insert(0, "./src/").c_str()))
+					if(remove(name.insert(0, dir.str().c_str()).c_str()))
 						cout << "Erro ao deletar o programa " << name << "." << endl;
 			}
 		}
@@ -188,12 +199,12 @@ void checkDirs() {
 }
 
 int main (int argc, char **argv) {
-	//dir(); Why?
 	welcome();
 	while (!login()) {
 		cout << endl << "Usuário ou senha incorretos!" << endl << endl;
 	}	
 	checkDirs();
+	dir(); // Inicia lista de programas
 	
 	vm = new VM();
 	as = new Assembler();
@@ -208,7 +219,7 @@ int main (int argc, char **argv) {
 	}
 	while (interpret(command));
 
-	deleteFiles();
+	deleteFiles(client);
 
 	delete vm;
 	delete as;
