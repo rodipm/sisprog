@@ -9,6 +9,6 @@ while read -r directory events filename; do
 		clear
 		git add ../
 		git commit -m "Refreshing README.md"
-		git push -u origim Documentations	
+		git push -u origin Documentations	
 	fi
 done
