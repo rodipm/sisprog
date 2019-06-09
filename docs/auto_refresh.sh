@@ -7,6 +7,8 @@ inotifywait -q -e close_write,moved_to -m . |
 while read -r directory events filename; do
 	if [ "$filename" = "$1" ]; then
 		clear
-		$2
+		git add ../
+		git commit -m "Refreshing README.md"
+		git push -u origim Documentations	
 	fi
 done
