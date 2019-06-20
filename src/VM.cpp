@@ -43,6 +43,7 @@ class VM
 	int step;
 	update_ci_info *ci_info;
 	bool DEBUG;
+	bool trace;
 	
 	// Io devices array
 	// Podem ser referenciados 3 devices pela instrucao IO, ja que o primeiro referencia todos
@@ -79,6 +80,7 @@ public:
 		indirect = false;
 		step = 0;
 		ci_info = new update_ci_info();
+		trace = false;
 
 		// Inicialização do device padrao (stdin e stdout)
 		stream = new iostream(nullptr);
@@ -135,8 +137,8 @@ public:
 		return ptr;
 	}	
 	
-	void debug(uint8_t instructionSize) {
-		if (DEBUG) {
+	void do_trace(uint8_t instructionSize) {
+		if (trace) {
 			cout << "[" << step << ":" << endl;
 			cout << "Registradores    :" << hex << " | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
@@ -548,7 +550,7 @@ public:
 			int instructionSize = this->fetch();
 			this->decode();
 			(this->*execute)();
-			debug(instructionSize);
+			do_trace(instructionSize);
 
 			//atualiza o _ci
 			update_ci(instructionSize);

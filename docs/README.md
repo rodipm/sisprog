@@ -355,28 +355,35 @@ o ponteiro da função que deve ser executada na parte de Execução descrita a 
 ```cpp
 (this->*execute)();
 ```
-É responsável por executar uma das seguintes rotinas de tratamento:
+É responsável por executar uma das seguintes possíveis rotinas de tratamento para cada uma das instruções de máquina disponíveis na linguagem assembly adotada. Cada instrução será detalhada em conjunto com sua rotina de tratamento. No próximo capítulo, sobre a linguagem assembly adotada essas instruções serão mais detalhadas.
 
 * **Jump**
 ```cpp
 // Instrução JUMP UNCONDITIONAL 0x0XXX
 void JP() {
-	if (!indirect) {
-		ci_info->addr	= _cb << 4;
-		ci_info->addr	= ci_info->addr << 4*3;
-		ci_info->addr	|= _ri & 0x0fff;
+	if (!indirect) { // Verificação de modo indireto de endereçamento
+		ci_info->addr	= _cb << 4; // obtem o valor de _cb
+		ci_info->addr	= ci_info->addr << 4*3; // shift de 3 bytes a esquerda para _cb ser o primeiro byte
+		ci_info->addr	|= _ri & 0x0fff; // AND logico com o valor dos 3 ultimos bytes da instução
 
 	}
 	else {
-		uint16_t OP = _ri & 0x0fff;
-		uint16_t ptr  = getIndirectPtr();
-		_cb = (uint8_t)(ptr >> 4*3);
-		indirect = false;
-		ci_info->addr = ((_cb << 4) << 4*3 ) | (ptr & 0x0fff);
+		uint16_t ptr  = getIndirectPtr(); // obtem o valor do endereço referenciado indiretamente
+		_cb = (uint8_t)(ptr >> 4*3); // obtém o novo _cb
+		indirect = false; // reseta o modo indireto
+		ci_info->addr = ((_cb << 4) << 4*3 ) | (ptr & 0x0fff); // concatena _cb e o endereço
 	}
-	ci_info->redirected = true;
+	ci_info->redirected = true; // flag de redirecionamento
 }
+
+// retorna o endereço contido em uma celula de memória referenciada por acesso indireto à mem.
+uint16_t getIndirectPtr() {
+	uint16_t OP = _ri & 0x0fff; // obtém o endereço de memória referenciado
+	uint16_t ptr  = ((uint16_t)mem[_cb][OP] << 8) & 0xff00 | ((uint16_t)mem[_cb][OP + 1] & 0x00ff); // concatena os dados da memória
+	return ptr;
+}	
 ```
+Tratamento da instrução de desvio incondicional, apresenta como OPcode o valor 0x0. Pode ser utilizado com o mnemonico JP /xxx, fazendo com que o *_ci* receba o valor /yxxx, sendo y o valor atual de *_cb*.
 
 * **Jump If Zero**
 ```cpp
@@ -387,6 +394,8 @@ void JZ() {
 }
 ```
 
+A instrução Jump if Zero apresenta OPcod 0x1 e verifica se o acumulador tem o valor 0 e, caso afirmativo, efetua o tratamento de JP para o endereço desejado. Sua forma mnemonica é: JZ /xxx.
+
 * **Jump If Negative**
 ```cpp
 // Instrução JUMP IF NEGATIVE 0x2XXX
@@ -395,6 +404,7 @@ void JN() {
 		this->JP();
 }
 ```
+Similar a instrução JZ, a instrução Jump if Negative, OPcode 0x2, verifica se o acumulador apresenta valores negativos e, caso afirmativo, aciona a rotina de JP. Sua representação mnemonica é: JN /xxx.
 
 * **Controle**
 ```cpp
@@ -423,7 +433,9 @@ void CN() {
 	}	
 }
 ```
+As instruções de controle, OPcode 0x3, podem ser utilizadas para acionar modo de endereçamento indireto, parar (halt) a máquina, retorno de interrupção (não implementado, apenas utilizado para possível implementação) e representação de NOP (no operation). Sua forma mnemonica é: CN /xx, no qual /xx representa um dos três códigos a seguir: [/00] HALT MACHINE, [/01] RETURN FROM INTERRUPT, [/02] INDIRECT MODE, [/03] NOP.
 
+O **Modo Indireto** possibilita que se referencie 
 * **Soma**
 ```cpp
 // Instrução PLUS 0x4XXX
@@ -617,3 +629,4 @@ void IO() {
 	}
 }
 ```
+
