@@ -435,21 +435,23 @@ void CN() {
 ```
 As instruções de controle, OPcode 0x3, podem ser utilizadas para acionar modo de endereçamento indireto, parar (halt) a máquina, retorno de interrupção (não implementado, apenas utilizado para possível implementação) e representação de NOP (no operation). Sua forma mnemonica é: CN /xx, no qual /xx representa um dos três códigos a seguir: [/00] HALT MACHINE, [/01] RETURN FROM INTERRUPT, [/02] INDIRECT MODE, [/03] NOP.
 
-O **Modo Indireto** possibilita que se referencie 
+O **Modo Indireto** possibilita que se referencie um endereço de memória dentro de um mesmo banco de memória (como em todas as funções de desvio acima) que contém um segundo endereço de memória de 4 bytes (incluindo banco de memória), no qual será efetuada a operação em modo indireto.
+
 * **Soma**
 ```cpp
 // Instrução PLUS 0x4XXX
 void plus() {
 	if (!indirect) {
-		_acc += (int8_t)mem[_cb][_ri & 0x0fff];
+		_acc += (int8_t)mem[_cb][_ri & 0x0fff]; // se modo indireto efetua a soma do valor atual de _acc com o valor da instrução
 	}
 	else {
-		uint16_t ptr = getIndirectPtr();
-		_acc += (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
+		uint16_t ptr = getIndirectPtr(); // obtém o valor referenciado indiretamente
+			_acc += (int8_t)mem[ptr >> 4*3][ptr & 0x0fff]; // efetua a soma
 		indirect = false;
 	}	
 }
 ```
+Insrtução de soma, OPcode 0x4, cuja representação mnemonica é: + /xxx. Atualiza o valor de *_acc*.
 
 * **Subtração**
 ```cpp
@@ -465,6 +467,7 @@ void minus() {
 	}	
 }
 ```
+Instrução de subtração, OPcode 0x5, cuja representação mnemonica é: - /xxx. Atualiza valor de *_acc*.
 
 * **Multiplicação**
 ```cpp
@@ -480,6 +483,7 @@ void multiply() {
 	}	
 }
 ```
+Instrução de multiplicação, OPcode 0x6, cuja representação mnemonica é: * /xxx. Atualiza valor de *_acc*.
 
 * **Divisão**
 ```cpp
@@ -495,21 +499,25 @@ void divide() {
 	}	
 }
 ```
+Instrução de divisão, OPcode 0x7, cuja representação mnemonica é: / /xxx. Atualiza valor de *_acc*.
 
 * **Load (Carrega da Memória)**
 ```cpp
 // Instrução LOAD FROM MEMORY 0x8XXX
 void LD() {
 	if (!indirect) {
-		_acc = (int8_t)mem[_cb][_ri & 0x0fff];
+		_acc = (int8_t)mem[_cb][_ri & 0x0fff]; // carrega em _acc o valor referenciado na memória
 	}	
 	else {
-		uint16_t ptr = getIndirectPtr();
+		uint16_t ptr = getIndirectPtr(); // obtém o valor indiretamente referenciado
 		_acc = (int8_t)mem[ptr >> 4*3][ptr & 0x0fff];
 		indirect = false;
 	}	
 }
 ```
+A instrução Load, OPcode 0x8, efetua o carregamento de um byte da memória e o carrega no acumulador. Sua representação mnemonica é: LD /xxx.
+
+Pode ser utilizado posteriormente a uma instrução CN /02 para efetuar a leitura de um endereço em modo indireto.
 
 * **Move (Move Para a Memória)**
 ```cpp
@@ -526,6 +534,7 @@ void MM() {
 	}	
 }
 ```
+A instrução MOVE, OPcode 0x9, efetua o salvamento dos dois bytes contidos em *_acc* em dois  bytes consecutivos de memória contidos na instrução ou de modo indireto. Sua representação mnemonica é: MM /xxx.
 
 * **Chamada de Subrotina**
 ```cpp
@@ -540,15 +549,28 @@ void SC() {
 	
 }
 ```
+A instrução de subroutine call, OPcode 0xA, permite a execução de subrotinas guardadas em memória, possibilitando a reutilização de código e trabalhando com umum sistema simples de tratamento do endereço de retorno, apenas o inserindo em um endereço de memória. Esta implementação, como está, não possibilita a chamada de rotinas de maneira recursiva, podendo ser implementada com um sistema de armazenamento em pilha, não contemplado neste projeto. Sua representação mnemonica é: SC /xxx.
 
 * **Chamada de Sistema Operacional**
 ```cpp
 // Instrução de chamada do sistema operacional 0xBX
 void OS() {
-	indirect = false;
-	// Empty
+	switch((_ri & 0x0f00) >> 8) {
+		case 0x0: // DISABLE TRACE
+			this->trace = false;
+			break;
+		case 0x1: // ENABLE TRACE
+			this->trace = true;
+			break;
+		default:
+			cout << "Instrução invalida!" << endl;
+			cout << "_ri: " << hex << _ri << endl;
+			exit(1);
+			break;
+	}
 }
 ```
+A instrução de Chamada de Sistema Operacional, OPcode 0xB, pode ser utilizada para habilitar o modo trace de execução, que efetua o log da região de memória do programa e dados de execução. Sua representação mnemonica é: OS /xx. Sendo xx um código de operação, sendo [/00] Disable Trace Mode e [/01] Enable Trace Mode.
 
 * **Input Output**
 ```cpp
@@ -563,7 +585,7 @@ void IO() {
 	stringstream str;
 	str << hex << setfill('0') << setw(2) << (uint16_t)_acc;
 
-	// Processamento do OP para verificar que tipo de instrução de IO deve ser eecutada
+	// Processamento do OP para verificar que tipo de instrução de IO deve ser executada
 	// verifica os dois bits mais significativos dos ultimos 4 bits da instruçao
 	// PUT DATA
 	if (OP & 0x4) { // 0b0100

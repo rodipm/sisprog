@@ -80,7 +80,7 @@ public:
 		indirect = false;
 		step = 0;
 		ci_info = new update_ci_info();
-		trace = false;
+		this->trace = false;
 
 		// Inicialização do device padrao (stdin e stdout)
 		stream = new iostream(nullptr);
@@ -138,7 +138,7 @@ public:
 	}	
 	
 	void do_trace(uint8_t instructionSize) {
-		if (trace) {
+		if (this->trace) {
 			cout << "[" << step << ":" << endl;
 			cout << "Registradores    :" << hex << " | _ci: " << _ci << " | _cb: " << (uint16_t)_cb << " | _ri: " << _ri << endl;
 			cout << "Estado da Maquina:" << " | IN : " << indirect << " | HA: " << !running << endl;
@@ -158,6 +158,8 @@ public:
 			}
 
 		}
+		else
+			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;			
 	}
 		
 	
@@ -201,18 +203,18 @@ public:
 	void CN() {
 		switch((_ri & 0x0f00) >> 8) {
 			case 0x0: // HLT
-				if(DEBUG) cout << "Machine is halted" << endl;
+				cout << "Machine is halted" << endl;
 				running = false;
 				break;
 			case 0x1: // RI
-				//cout << "Return from interrupt" << endl;
+				if(DEBUG) cout << "Return from interrupt" << endl;
 				break;
 			case 0x2: // IN
-				//cout << "Indirect mode ON" << endl;
+				if(DEBUG) cout << "Indirect mode ON" << endl;
 				indirect = true;
 				break;
 			case 0x3: // NOP;
-				//cout << "NOP" << endl;
+				cout << "NOP" << endl;
 				break;
 			default:
 				cout << "Instrução invalida!" << endl;
@@ -310,8 +312,19 @@ public:
 
 	// Instrução de chamada do sistema operacional 0xBX
 	void OS() {
-		indirect = false;
-		// Empty
+		switch((_ri & 0x0f00) >> 8) {
+			case 0x0: // DISABLE TRACE
+				this->trace = false;
+				break;
+			case 0x1: // ENABLE TRACE
+				this->trace = true;
+				break;
+			default:
+				cout << "Instrução invalida!" << endl;
+				cout << "_ri: " << hex << _ri << endl;
+				exit(1);
+				break;
+		}	
 	}
 
 	// Instrução INPUT OUTPUT 0xCX
@@ -343,7 +356,6 @@ public:
 					stream->rdbuf(io_devices[DEV-1][1]);
 					char value = (char)_acc;
 					stream->write(&value, 1);
-					cout << "########WRITING " << value << endl;
 				}
 			}
 			stream->rdbuf(nullptr);
@@ -479,7 +491,7 @@ public:
 		file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
 		io_devices[1][0] = file_stream->rdbuf();
 		io_devices[1][1] = file_stream->rdbuf();
-		cout << "#####RUNNING DUMPER#####" << endl;
+		if(DEBUG) cout << "#####RUNNING DUMPER#####" << endl;
 		run(0x50, true);
 		file_stream->close();
 		delete file_stream;

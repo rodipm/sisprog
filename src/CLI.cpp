@@ -76,13 +76,9 @@ void run (string program) {
 	}
 	as->Assemble("loader.asm");
 	assembled prog = as->Assemble(program, client);
-	cout << "BREAKS HERE? - assemble" << endl;
 	vm->start();
-	cout << "BREAKS HERE? - start" << endl;
 	vm->load(prog.name, prog.size, client);
-	cout << "BREAKS HERE? - load" << endl;
 	vm->run(prog.initial_addres & 0xffff, true);
-	cout << "BREAKS HERE? - run" << endl;
 }
 
 void dir (bool show = false) {
@@ -90,7 +86,6 @@ void dir (bool show = false) {
 	struct dirent *pent = nullptr;
 	stringstream dir;
 	dir << "./usr/" << client << "/src";
-	cout << "DIRECTORY: " << dir.str() << endl;
 	pdir = opendir(dir.str().c_str());
 	if (pdir == nullptr) exit(1);
 
@@ -199,7 +194,7 @@ void checkDirs() {
 }
 
 int main (int argc, char **argv) {
-	welcome();
+	//welcome();
 	while (!login()) {
 		cout << endl << "Usuário ou senha incorretos!" << endl << endl;
 	}	

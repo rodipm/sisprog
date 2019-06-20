@@ -1,5 +1,4 @@
 INICIO	@	/0100 ;N2 - Calcula o quadrado de um número
-	OS	/01	;Habilita trace mode
 	IO	/01
 	MM	N
 	JZ	END
@@ -18,7 +17,7 @@ LOOP	MM	RES
 	MM	RES
 	JP	LOOP
 END	LD	RES
-	IO	/00	;Desabilita trace mode
+	IO	/00	;Disable trace mode
 	CN	/00
 	@	/0500	;Dados
 N	K	/00	;N (a ser calculado N2)

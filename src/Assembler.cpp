@@ -98,7 +98,7 @@ public:
 			dir << "./usr/" << client << "/src/";
 		dir << file;
 		fstream input;
-	       	input.open(dir.str(), ios_base::in);
+	    input.open(dir.str(), ios_base::in);
 
 		if (!input)
 			exit(1);
@@ -120,6 +120,7 @@ public:
 			if (line.find(';') != string::npos) { // contém comentário
 				comment = line.substr(line.find(';'), string::npos);
 				command = line.substr(0, line.find(';') - 1);
+
 			}
 			else  {
 				command = line;
@@ -130,11 +131,14 @@ public:
 			if (line[0] != ' ') { // Has label
 				pos = command.find(' ');
 				label = command.substr(0, pos);
+
 			}
+
 			if (label == " ") label = "";
 
 			// Get MNEMONIC (or pseudo)
 			size_t newPos = command.find(' ', pos + 1);
+
 			mnemonic = command.substr(pos+1, newPos - pos - 1);
 			if (mnemonic == " " || mnemonic == "\t") mnemonic = "";
 			
@@ -144,6 +148,7 @@ public:
 
 			file_line current_line(label, mnemonic, arg, comment);
 			lines.push_back(current_line);
+
 		}
 
 		return lines;
@@ -173,6 +178,7 @@ public:
 		dir << ".";
 		if (client != "")
 			dir << "/usr/" << client;
+		
 		dir << "/bin/" << file_name.substr(0, file_name.length() - 4) << str.str();
 		stringstream hex_dir;
 		stringstream bin_dir;
@@ -204,28 +210,11 @@ public:
 		// CheckSum
 		BYTE check_sum = 0x00;
 		for (int i = 0; i < str_bin.str().length(); i++) {
-			//stringstream ss;
-			//ss << hex << str_bin.str()[i];
-			//BYTE lsb;
-			//BYTE msb;
-			//ss >> lsb;
-			//lsb = lsb & 0x0f;
-			//cout << ss.str() << endl;
-			//ss.str("");
-			//ss << hex << str_bin.str()[i+1];
-			//ss >> msb;
-			//msb = (msb << 4) & 0xf0;
-			//cout << hex << (uint16_t)msb << endl;
-			//check_sum += msb | lsb;
 			stringstream ss;
 			ss << str_bin.str()[i];
 			char cByte;
 			ss.read(&cByte, 2);
-			//if (cByte == 0x0b)
-				//cout << "::???????????????????????????????????????????????????????????????" << endl;
-			//cout << "######CBYTE(" << i << "): " << hex << ((uint16_t)cByte & 0x00ff) << endl;
 			check_sum += (uint16_t)cByte & 0x00ff;
-			//cout << "######CHECKSUM(" << i << "): " << hex << (uint16_t)check_sum << endl;
 		}
 		check_sum = check_sum & 0x00ff;
 		check_sum = ~check_sum & 0x00ff;
@@ -233,9 +222,6 @@ public:
 
 		str_bin << (char)check_sum; 
 		str << endl << hex << (WORD)check_sum << endl;
-
-		//cout << "+++++++++++ HEX OBJ(" << file_number << ") +++++++++++" << endl << str.str() << endl;
-		//cout << "+++++++++++ BIN OBJ(" << file_number << ") +++++++++++" << endl << str_bin.str() << endl;
 		
 		bin_file << str_bin.rdbuf();
 		
@@ -394,21 +380,6 @@ public:
 					bool isArray = lines[i].arg.find("[") != string::npos && lines[i].arg.find("]") != string::npos;
 
 					map<string, string>::iterator it = simbols_list.find(lines[i].arg);
-					if (step == 1 && isArray ) {
-						//stringstream sindex;
-						//sindex << hex << setfill('0') << setw(2) 
-						//	<< lines[i].arg.substr(lines[i].arg.find("[") + 1,
-						//		lines[i].arg.find("]") - lines[i].arg.find("]") + 1);
-						//sindex >> index;
-						//cout << "########INDEX: " << hex << index << endl;
-
-						//index = (uint16_t)_ci + index;
-						//stringstream str;
-						//str << "/" << hex << setfill('0') << setw(4) << index;
-						//cout << str.str() << endl;
-						//simbols_list[lines[i].arg] = str.str();
-						//simbols_list[lines[i].arg] = "undefined";
-					}
 
 					if ((step == 1) && (it == simbols_list.end())) { // Undefined simbol
 						simbols_list[lines[i].arg] = "undefined";
@@ -423,7 +394,6 @@ public:
 							string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - (lines[i].arg.find("]") - lines[i].arg.find("[") + 1));
 							stringstream sarg;
 							uint16_t arg;
-							//cout << "%%%%%%%% OLABEL: " << oLabel << endl;
 							sarg << hex << simbols_list[oLabel].substr(1, string::npos);
 							sarg >> arg;
 
@@ -468,7 +438,7 @@ public:
 			cout << list[i] << endl;
 		}
 		
-		cout << "BREAKS HERE?" << endl;
+		cout << "BREAKS HERE? Right??" << endl;
 		return assembled(file_number, begin_addr, file_name);
 
 	}
