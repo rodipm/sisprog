@@ -653,3 +653,19 @@ void IO() {
 ```
 Instrução e Input Output, OPcode 0xC, controla as operações de input e output, de forma que pode-se escrever (PUT DATA) e ler (GET DATA) das possiveis fontes. Existem 4 possíveis devices fonte: [1] - Cin / Cout, [2] e [3] - Disponíveis para o programador. A utilização dessa instução é feita seguindo o seguinte formato mnemonico: IO	/od, em que 'o' representa a operação a ser realizada: [0] - Get Data, [1] - Put Data,  [2] - Enable Interrupt, [3] - Disable Interrupt, sendo que as duas últimas não foram implementdas, como citado anteriormente. E 'd' representa um dos possíveis devices.
  
+Para finalizar as funcionalidade da maquina virtual, segue o código que encapsula o dumper, escrito em linguagem assembly (mostrado adiante).
+```cpp
+// Dumper guarda parte da memória em um arquivo escolhido
+void dump(string file, string client) {
+
+	stringstream name;
+	name << "./usr/" << client << "/bin/" << file << ".dmp.bin";
+	file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
+	io_devices[1][0] = file_stream->rdbuf();
+	io_devices[1][1] = file_stream->rdbuf();
+	if(DEBUG) cout << "#####RUNNING DUMPER#####" << endl;
+	run(0x50, true);
+	file_stream->close();
+	delete file_stream;
+}
+```
