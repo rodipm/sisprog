@@ -657,7 +657,6 @@ Para finalizar as funcionalidade da maquina virtual, segue o código que encapsu
 ```cpp
 // Dumper guarda parte da memória em um arquivo escolhido
 void dump(string file, string client) {
-
 	stringstream name;
 	name << "./usr/" << client << "/bin/" << file << ".dmp.bin";
 	file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
@@ -669,3 +668,4 @@ void dump(string file, string client) {
 	delete file_stream;
 }
 ```
+Essa função efetua os links corretos dos buffers de leitura e escrita para serem utilizados pela VM na interpretação do dumper e inicia a execução da VM a partir do endereço 0x50 de memória, que contem o dumper.
