@@ -651,4 +651,5 @@ void IO() {
 	}
 }
 ```
-
+Instrução e Input Output, OPcode 0xC, controla as operações de input e output, de forma que pode-se escrever (PUT DATA) e ler (GET DATA) das possiveis fontes. Existem 4 possíveis devices fonte: [1] - Cin / Cout, [2] e [3] - Disponíveis para o programador. A utilização dessa instução é feita seguindo o seguinte formato mnemonico: IO	/od, em que 'o' representa a operação a ser realizada: [0] - Get Data, [1] - Put Data,  [2] - Enable Interrupt, [3] - Disable Interrupt, sendo que as duas últimas não foram implementdas, como citado anteriormente. E 'd' representa um dos possíveis devices.
+ 
