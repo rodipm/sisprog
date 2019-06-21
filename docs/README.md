@@ -1112,7 +1112,7 @@ struct assembled {
 
 Contendo seu tamanho, endereço inicial e nome, utilizados pelo CLI para o funcionamento da máquina virtual.
 
-### ARQUIVOS GERADOS ###
+### ARQUIVOS GERADOS E FORMATO DO CÓDIGO OBJETO ###
 
 São gerados, dentro da pasta bin, dois tipos de arquivos com a seguinte nomenclatura: nomeX.o e nomeX.bin, sendo X um número inteiro positivo ou zero, representado o número de blocos gerados pela montagem do código. Os arquivos do tipo `.o` apresentam o código objeto em hexadecimal, para leitura humana. Já os arquivos do tipo `.bin` apresentam-no em formato binário, pronto para ser carregado em memória.
 
