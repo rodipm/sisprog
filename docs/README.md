@@ -4,7 +4,7 @@ Rodrigo Perrucci Macharelli - 9348877
 
 --------------------
 
-## Intro ##
+## Introdução ##
 
 O projeto tem como objetivo implementar programaticamente um sistema computacional funcional que possibilite a programação e execução
 de código em linguagem de máquina aboluta. Para isso, o sistema baseia-se em em uma **Máquina Virtual**, um **Interpretador** (interface de
@@ -669,3 +669,12 @@ void dump(string file, string client) {
 }
 ```
 Essa função efetua os links corretos dos buffers de leitura e escrita para serem utilizados pela VM na interpretação do dumper e inicia a execução da VM a partir do endereço 0x50 de memória, que contem o dumper.
+
+## LINGUAGEM SIBÓLICA ##
+
+Para a simulação de um sistema de programação, deve-se definir em que linguagem esse sistema pode ser programado. Define-se neste capítulo a linguágem simbólica utilizada para tal fim.
+Trata-se da arquitetura apresentada em sala de aula (Aula 09), que embora seja uma arquitetura simples, podendo simular eventos de loop, decisão, operações aritméticas, de entrada e saída e de controle.
+
+### INSTRUÇÕES DE DESVIO ###
+
+1.
