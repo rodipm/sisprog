@@ -1122,3 +1122,12 @@ Estes arquivos seguem um formato bem definido de código objeto, sendo que apres
 * Terceiro byte: Tamanho do programa (em bytes)
 * Último byte: Chechsum
 * Demais bytes: Dados e instruções
+
+## INTERFACE DE LINHA DE COMANDOS (CLI) ##
+
+### DESCRIÇÃO ###
+
+Para efetuar o controle dos macro componentes do sistema, isto é: Máquina Virtual e Assembler, foi implementado um sistema de interface por linha de comando com sistema de login e possibilitando a separação de áreas de usuário, com seus respectivos programas.
+O cli atua como orquestrador entre o usuário e os sistemas envolvidos, como representa o diagrama a seguir:
+
+![alt text](./imgs/InteracaoCliAssemblerMV.png)
