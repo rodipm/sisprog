@@ -677,16 +677,45 @@ Trata-se da arquitetura apresentada em sala de aula (Aula 09), que embora seja u
 
 ### INSTRUÇÕES DE DESVIO ###
 
-1. Jump Unconditional | /0xxx
+1. Jump Unconditional | JP /xxx | /0xxx
 Efetua desvio incondicional para endereços (/xxx)  dentro do mesmo banco de memória (/y).
 > ci = /yxxx
 
-2. Jump if Zero | /1xxx
+2. Jump if Zero | JZ /xxx | /1xxx
 Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador igual a zero.
 > if acc == 0 then ci = /yxxx; else ci = ci + instructionSize
 
-3. Jummp if Negative | /2xxx
+3. Jump if Negative | JN /xxx | /2xxx
 Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador menor que zero.
 > if acc < 0 then ci = /yxxx; else ci = ci + instructionSize
 
+### INSTRUÇÕES DE CONTROLE ###
+
+São acessadas como operações executadas pela instrução Control (CN).
+
+1. Halt Machine | CN /00 | /30
+Para a execução da máquina.
+
+2. Return From Interrupt | CN /01 | /31
+Operação não implementada neste projeto.
+
+3. Indirect Mode | CN /02 | /32
+Aciona o modo indireto de endereçamento de memória. Neste modo pode-se acessar regiões de memóra de bancos diferentes.
+
+4. No Operation | CN /03 | /33
+Instrução nula.
+
+### INSTRUÇÕES ARITIMÉTICAS ###
+
+1. Soma | + /xxx | /4xxxx
+> acc = acc + /xxx
+
+2. Subtração | - /xxx | /5xxx
+> acc = acc + /xxx
+
+3. Multiplicação | * /xxx | /6xxx
+> acc = acc + /xxx
+
+4. Divisão | / /xxx | /7xxx
+> acc = acc / /xxx
 
