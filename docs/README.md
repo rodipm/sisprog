@@ -863,14 +863,14 @@ Analiza linha por linha em busca de labels, listando-os. A cada linha analizada 
 	* Atualizar o _ci apropriadamente para cada tipo de instrução.
 
 * PASSO 2:
-O segundo passo é responsável por gerar 3 tipos de arquivos:
+O segundo passo é responsável por gerar 3 tipos de informações:
 
-	* Arquivo de listagem: Apresenta o formato:
+	* Listagem: Apresenta o formato:
 	> ADDRES OBJECT LINE SOURCE
 
 	(OBJECT é o código de máquina hexadecimal com os endereços já resolvidos)
 
-	* Arquivo de labels: apresenta o formato:
+	* Labels abels: apresenta o formato:
 	> LABEL VALUE
 
 	* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
@@ -1112,4 +1112,13 @@ struct assembled {
 
 Contendo seu tamanho, endereço inicial e nome, utilizados pelo CLI para o funcionamento da máquina virtual.
 
+### ARQUIVOS GERADOS ###
 
+São gerados, dentro da pasta bin, dois tipos de arquivos com a seguinte nomenclatura: nomeX.o e nomeX.bin, sendo X um número inteiro positivo ou zero, representado o número de blocos gerados pela montagem do código. Os arquivos do tipo `.o` apresentam o código objeto em hexadecimal, para leitura humana. Já os arquivos do tipo `.bin` apresentam-no em formato binário, pronto para ser carregado em memória.
+
+Estes arquivos seguem um formato bem definido de código objeto, sendo que apresenta a seguinte estrutura:
+
+* Primeiro e segundo bytes: Endereço inicial de carregamento do programa em memória.
+* Terceiro byte: Tamanho do programa (em bytes)
+* Último byte: Chechsum
+* Demais bytes: Dados e instruções
