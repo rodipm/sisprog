@@ -840,4 +840,4 @@ O formato padrão de uma linha de código segue o seguinte esquema:
 
 No qual cada um dos campos deve ser inserido sempre em sua respectiva coluna, cada uma separada por um TAB. Percebe-se a utilização das pseudo instruções para delimitar inicio e fim do código, assim como a definição de constantes e utilização de diversas instruções. Exemplos do funcionamento desse programa serão dados mais adiante.
 
-
+## ASSEMBLER ##
