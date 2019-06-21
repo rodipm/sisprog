@@ -689,7 +689,7 @@ Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se a
 Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador menor que zero.
 > if acc < 0 then ci = /yxxx; else ci = ci + instructionSize
 
-### INSTRUÇÕES DE CONTROLE ###
+### INSTRUÇÃO DE CONTROLE ###
 
 São acessadas como operações executadas pela instrução Control (CN).
 
@@ -744,3 +744,100 @@ A estrutura adotada para se trabalhar com subrotinas segue o seguinte formato:
 > memory[/yxxx] = ENDEREÇO DE RETORNO
 
 > memory[/yxxx + 2] = PRIMEIRA INSTRUÇÃO DA SUBROTINA	  
+
+Assim, o endereço de retorno deve ser armazenado nos dois bytes imediatamente anteriores à primeira instrução da subrotina. O endereço do primeiro byte do endereço de retorno (/yxxx) passa a ser o endereço chamado pela instrução SC, como mostrado em seu exemplo acima.
+
+### INSTRUÇÃO DE SISTEMA OPERACIONAL ###
+
+Para este projeto não há um sistema operacional propriamente dito, sendo o CLI responsável por algumas funções cabíveis ao sistema operacional. Tendo isso em vista, foram adotadas duas funcionalidades para a instrução de OS.
+
+1. Disable Trace | OS /00 | /B0
+
+Desabilita a funcionalidade de TRACE, que exibe, a cada instrução executada, um mapa da memória atualmente ocupada pelo código assim como dados de registradores, estado da máquina e outras informações.
+
+2. Enable Trace | OS /01 | /B1
+
+Habilita a funcionalidade de TRACE.
+
+### INSTRUÇÃO DE ENTRADA E SAÍDA ###
+
+Essa instrução permite acessar um dos 3 pares de buffer (entrada / saída ) disponíveis para o programador. Esses pares são tratados como dispositivos, que podem ser acessados para as operações de leitura e escrita.
+
+Os devices acessíveis são:
+* /00 - Escrita em todos os devices.
+* /01 - Escrita / Leitura no dispositivo padrao de entrada e saída da máquina hospedeira.
+* /02 - Escrita / Leitura em dispositivos definidos pelo programador.
+* /03 - Escrita / Leitura em dispositivos definidos pelo programador.
+
+As operações possíveis são:
+
+1. Get Data | IO /00 - /03 | /C0 - /C3
+
+Carrega um byte do dispositivo de entrada no acumulador.
+> acc = device[/x]
+
+2. Put Data | IO /04 - /07 | /C4 - /C7
+
+Carrega dois bytes do acumulador no dispositivo de saída.
+> device[/x] = acc
+
+### PSEUDO INSTRUÇÕES ###
+
+São instruções que não são direcionadas à execução da máquina virtual, mas sim para coordenar o funcionamento do Assembler.
+
+1. Origin | @ /yxxx
+
+Define a endereço de memória origem para a carga do programa em memória.
+
+2. Array | $ /xxx 
+
+Define alocação de memória para ser utilizado como vetor.
+
+3. Constant | # /xx
+
+Aloca no endereço de memória em que se encontra o valor /xx.
+
+### Detalhes de Implementação ###
+
+Embora não conste na linguagem apresentada em sala de aula, adaptou-se uma notação de vetor, utilizando-se de colchetes para envolver o índice desejado.
+
+Segue um exemplo de elaboração de código na linguagem assembly adotada:
+
+```
+INICIO	@	/0100 ;N2 - Calcula o quadrado de um número
+	IO	/01
+	MM	N
+	JZ	END
+	LD	UM
+	MM	ODD
+LOOP	MM	RES
+	LD	N
+	-	UM
+	MM	N
+	JZ	END
+	LD	ODD
+	+	DOIS
+	MM	ODD
+	LD	RES
+	+	ODD
+	MM	RES
+	JP	LOOP
+END	LD	RES
+	CN	/00
+	@	/0500	;Dados
+N	K	/00	;N (a ser calculado N2)
+UM	K	/01
+DOIS	K	/02
+ODD	K	/00
+RES	K	/00
+	#	INICIO
+
+```
+
+O programa acima calcula o quadrado de um valor inserido pelo usuário em tempo de execução do programa. Observando o código fonte, pode-se perceber algumas regras sobre a escrita nessa linguagem.
+O formato padrão de uma linha de código segue o seguinte esquema:
+> LABEL INSTRUÇÃO OPERANDO ;COMENTÁRIO
+
+No qual cada um dos campos deve ser inserido sempre em sua respectiva coluna, cada uma separada por um TAB. Percebe-se a utilização das pseudo instruções para delimitar inicio e fim do código, assim como a definição de constantes e utilização de diversas instruções. Exemplos do funcionamento desse programa serão dados mais adiante.
+
+
