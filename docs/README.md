@@ -875,7 +875,7 @@ Cada linha de código com mnemonicos deve gerar um obj (hexadecimal)
 
 Cada linha deve ser analisada da seguinte maneira:
 
-	* Se for apenas uma linha de comentário ou de label: apenas lita-la
-	* Se contem mnemonico: Obter op
-	* Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
+* Se for apenas uma linha de comentário ou de label: apenas lista-la
+* Se contem mnemonico: Obter op
+* Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
 
