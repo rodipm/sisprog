@@ -866,16 +866,16 @@ O segundo passo é responsável por gerar 3 tipos de arquivos:
 
 	(OBJECT é o código de máquina hexadecimal com os endereços já resolvidos)
 
-* Arquivo de labels: apresenta o formato:
-> LABEL VALUE
+	* Arquivo de labels: apresenta o formato:
+	> LABEL VALUE
 
-* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
+	* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
 
 Cada linha de código com mnemonicos deve gerar um obj (hexadecimal)
 
 Cada linha deve ser analisada da seguinte maneira:
 
-*Se for apenas uma linha de comentário ou de label: apenas lita-la
-*Se contem mnemonico: Obter op
-*Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
+	* Se for apenas uma linha de comentário ou de label: apenas lita-la
+	* Se contem mnemonico: Obter op
+	* Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
 
