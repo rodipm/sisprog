@@ -708,30 +708,37 @@ Instrução nula.
 ### INSTRUÇÕES ARITIMÉTICAS ###
 
 1. Soma | + /xxx | /4xxxx
+
 > acc = acc + /xxx
 
 2. Subtração | - /xxx | /5xxx
+
 > acc = acc + /xxx
 
 3. Multiplicação | * /xxx | /6xxx
+
 > acc = acc + /xxx
 
 4. Divisão | / /xxx | /7xxx
+
 > acc = acc / /xxx
 
 ### INSTRUÇÕES DE ACESSO A MEMÓRIA ###
 
 1. Load From Memory | LD /xxx | /8xxx
+
 Efetua a leitura de um endereço de memória e guarda o byte no acumulador.
 > acc = memory[/xxx]
 
 2. Move to Memory | MM /xxx | /9xxx
+
 Efetua a escrita em memória com os dois bytes contidos em /yxxx e /yxxx + /01.
 > acc = memory[/yxxx] | memory[/yxxx + 1]
 
 ### INSTRUÇÃO DE CHAMADA DE SUBROTINA ###
 
 1. Subroutine Call | SC /xxx | /Axxx
+
 Efetua a chamada de subrotina alocada no endereço /yxxx.
 A estrutura adotada para se trabalhar com subrotinas segue o seguinte formato:
 memory[/yxxx] 		= ENDEREÇO DE RETORNO
