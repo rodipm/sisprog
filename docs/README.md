@@ -853,10 +853,10 @@ O arquivo fonte é lido DUAS VEZES, constituindo dois passos:
 * PASSO 1:
 Analiza linha por linha em busca de labels, listando-os. A cada linha analizada deve-se:
 
-*Associar labels a seus respectivos endereçcos
-*Se a linha contiver operandos referenciados por labels, deve-se verificar se o label ja foi listado, caso nao tenha sido
- adiciona-o com endereço indefinido;
-*Atualizar o _ci apropriadamente para cada tipo de instrução.
+	* Associar labels a seus respectivos endereçcos
+	* Se a linha contiver operandos referenciados por labels, deve-se verificar se o label ja foi listado, caso nao tenha sido
+	 adiciona-o com endereço indefinido;
+	* Atualizar o _ci apropriadamente para cada tipo de instrução.
 
 * PASSO 2:
 O segundo passo é responsável por gerar 3 tipos de arquivos:
