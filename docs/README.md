@@ -842,6 +842,8 @@ No qual cada um dos campos deve ser inserido sempre em sua respectiva coluna, ca
 
 ## ASSEMBLER ##
 
+### ESPECIFICAÇÃO ###
+
 Construi-se um MONTADOR de DOIS PASSOS.
 
 Partindo de um código fonte em linguagem simbólica com a seguinte estruturação:
@@ -849,6 +851,8 @@ Partindo de um código fonte em linguagem simbólica com a seguinte estruturaç�
 > LABEL MNEMONIC OPERAND ;COMMENT
 
 O arquivo fonte é lido DUAS VEZES, constituindo dois passos:
+
+### DESCRIÇÃO DOS PASSOS DE MONTAGEM ###
 
 * PASSO 1:
 Analiza linha por linha em busca de labels, listando-os. A cada linha analizada deve-se:
@@ -871,6 +875,7 @@ O segundo passo é responsável por gerar 3 tipos de arquivos:
 
 	* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
 
+### TRATAMENTO DO CÓDIGO FONTE ###
 Cada linha de código com mnemonicos deve gerar um obj (hexadecimal).
 
 Cada linha deve ser analisada da seguinte maneira:
@@ -878,4 +883,233 @@ Cada linha deve ser analisada da seguinte maneira:
 * Se for apenas uma linha de comentário ou de label: apenas lista-la
 * Se contem mnemonico: Obter op
 * Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
+
+### IMPLEMENTAÇÃO ###
+
+Abaixo encontra-se o código comentado da parte central de lógica do montador:
+```cpp
+assembled Assemble(string file, string client = "") {
+
+	file_name = file;
+	file_number = 0;
+	_ci = 0;
+	initial_addr = 0;
+	block_size = 0;
+	
+	// Processa todas as linhas do arquivo
+	vector<file_line> lines = processFile(file, client);
+
+	// As linhas pós processadas serão armazenadas em um vector
+	vector<string> list;		
+	
+	//tabela de simbolos
+	map<string, string> simbols_list;
+	
+
+	// Codigos objeto gerados
+	vector<obj> obj_list;
+
+	// Trata-se de um assembler de dois passos, logo teremos de iterar duas vezes
+	for (int step = 1; step < 3; step++) {
+		_ci = 0;
+		// Analizamos cada uma das linhas obtidas no processamento do arquivo
+		for (int i = 0; i < lines.size(); i++) {
+
+			if (lines[i].mnemonic == "") { // Comment or blank line (will be ignored)
+				if ((step == 2) && (lines[i].comment != "")) { // Just a comment line
+					do_list(list, lines[i].comment, i); // List comment line if step = 2
+					continue;
+				}
+				continue;
+			} 
+
+			// Analise do label
+			if (step == 1) {
+				if (lines[i].label != "") { // Has label
+					if (simbols_list.find(lines[i].label) == simbols_list.end()) { // Create new simbol 
+						stringstream str;
+						str << "/" << hex << setfill('0') << setw(4) << _ci;
+						simbols_list[lines[i].label] = str.str();
+					} else if (simbols_list[lines[i].label] == "undefined") { // Simbol undefined
+						stringstream str;
+						str << "/" << hex << setfill('0') << setw(4) << _ci;
+						simbols_list[lines[i].label] = str.str();
+					} else {
+						cout << "ASSEMBLER ERROR: Label redefinition at line " << i + 1 << endl;
+						exit(1);
+					}	
+				}	
+			}
+
+			// Analise do mnemonico
+
+			// Tenta verificar qual o mnemonico encontrado no conjunto de instruções normais
+			int op, size, arg;
+			op = -1;
+			size = 0;
+			for (int j = 0; j < 0xd; j++) {
+				if (mnemonic_table[j].name.find(lines[i].mnemonic) == 0) {
+					op = mnemonic_table[j].op;
+					size = mnemonic_table[j].size;
+				}	
+			}
+			
+			// Se nao foi encontrado, pode ser uma pseudoinstrução
+			if (op == -1) {
+				if (lines[i].mnemonic == "@") { // ORIGIN
+
+					if (step == 2) {
+						if (!obj_list.empty())
+							do_create_obj(obj_list, client);
+						do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
+					}
+
+					stringstream str;
+					str << hex << lines[i].arg.substr(1, string::npos);
+					str >> initial_addr;
+					_ci = initial_addr;
+					if (file_number == 0)
+						begin_addr = initial_addr;
+					continue;
+				} else if (lines[i].mnemonic == "$") { // ARRAY
+					stringstream str;
+					str << hex << lines[i].arg.substr(1, string::npos);
+					int s_arr;
+					str >> s_arr;
+					s_arr &= 0x0fff;
+					_ci += s_arr;
+					if (step == 2)
+						do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
+					continue;
+				} else if (lines[i].mnemonic == "K") { // CONSTANT
+					if (lines[i].label == "") {
+						cout << "Assembler Error: Constant without label" << endl;
+						exit(1);
+					}
+					stringstream str;
+					str << hex << lines[i].arg.substr(1, string::npos);
+					int k;
+					str >> k;
+					k &= 0x00ff;
+					if (step == 2) {
+						obj_list.push_back(obj((k << 8) & 0xf000, (k & 0x000f) << 8, true));
+						do_list(list, lines[i], i, obj_list.back());
+						block_size += 1;
+						continue;
+					}
+					_ci += 1;
+				} else if (lines[i].mnemonic == "#") { // END
+					if (step == 2) {
+						do_create_obj(obj_list, client);
+						do_list(list, "\t" + lines[i].mnemonic + "\t" + lines[i].arg + "\t" + lines[i].comment, i);
+						continue;
+
+					}
+				}
+			}
+
+			// Processamento dos operandos (se existirem)
+			if (lines[i].arg == "") // Malformed Instruction
+				exit(1);
+
+			// Verifica se o operando é um label ou um endereço direto
+			if (lines[i].arg[0] == '/') { // Is literal hex
+				if (step == 2) {
+					stringstream str;
+					str << hex << lines[i].arg.substr(1, string::npos);
+					int arg;
+					str >> arg;
+					if (size == 2)
+						obj_list.push_back(obj(op << 4*3, arg & 0x0fff));
+					else  
+						obj_list.push_back(obj(op << 4*3, (arg & 0x000f) << 8));
+						
+					do_list(list, lines[i], i, obj_list.back());
+				}
+			} else { // Is label
+
+
+				// Suporte para notação de array
+				bool isArray = lines[i].arg.find("[") != string::npos && lines[i].arg.find("]") != string::npos;
+
+				map<string, string>::iterator it = simbols_list.find(lines[i].arg);
+
+				if ((step == 1) && (it == simbols_list.end())) { // Undefined simbol
+					simbols_list[lines[i].arg] = "undefined";
+				}
+				
+
+				if (step == 2 && it != simbols_list.end()) { //Label already defined, generate obj code
+					stringstream str;
+					if (!isArray)
+						str << hex << simbols_list[lines[i].arg].substr(1, string::npos);
+					else {
+						string oLabel = lines[i].arg.substr(0, lines[i].arg.length() - (lines[i].arg.find("]") - lines[i].arg.find("[") + 1));
+						stringstream sarg;
+						uint16_t arg;
+						sarg << hex << simbols_list[oLabel].substr(1, string::npos);
+						sarg >> arg;
+
+						stringstream sindex;
+						sindex << hex << setfill('0') << setw(2) 
+							<< lines[i].arg.substr(lines[i].arg.find("[") + 1,
+								lines[i].arg.find("]") - lines[i].arg.find("]") + 1);
+						sindex >> index;
+						arg += index;
+						str << hex << setfill('0') << setw(4) << arg;
+
+						simbols_list[lines[i].arg] = "/" + str.str();
+
+					}
+
+					uint16_t arg;
+					str >> arg;
+					obj_list.push_back(obj(op << 4*3, arg & 0x0fff));
+					do_list(list, lines[i], i, obj_list.back());
+				}
+			}	
+
+			_ci += size;
+			if (step == 2)
+				block_size += size;
+		}
+	}
+
+	// Gera código objeto final (se houver)
+	do_create_obj(obj_list, client);
+
+	cout << endl << "LABELS" << "\t" << "VALUE" << endl;
+	cout << "==========================" << endl;
+
+	for (map<string, string>::iterator it = simbols_list.begin(); it != simbols_list.end(); ++it) {
+		cout << it->first << "\t" << hex << it->second << endl;
+	}
+
+
+	cout << endl << "ADDRES\t" << "OBJECT\t" << "LINE\t" << "SOURCE\t" << endl;
+	for (int i = 0; i < list.size(); i++) {
+		cout << list[i] << endl;
+	}
+	
+	return assembled(file_number, begin_addr, file_name);
+
+}
+```
+Os métodos auxiliares utilizados pelo assembler não serão aqui expostos, mas seus nomes podem sugerir claramente suas funções. O código fonte do assembler, assim como todos os outros, se encontram no site do projeto.
+
+Nota-se que o tipo de retorno é `assembled`, uma estrutura de dados que contém a seguinte definição:
+```cpp
+struct assembled {
+	int size;
+	unsigned int initial_addres;
+	string name;
+	assembled(int s, unsigned int i, string n) 
+		: size(s)
+		, initial_addres(i) 
+		, name(n.substr(0, n.length() -4 )) {}
+};
+```
+
+Contendo seu tamanho, endereço inicial e nome, utilizados pelo CLI para o funcionamento da máquina virtual.
+
 
