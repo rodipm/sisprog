@@ -741,5 +741,5 @@ Efetua a escrita em memória com os dois bytes contidos em /yxxx e /yxxx + /01.
 
 Efetua a chamada de subrotina alocada no endereço /yxxx.
 A estrutura adotada para se trabalhar com subrotinas segue o seguinte formato:
-memory[/yxxx] 		= ENDEREÇO DE RETORNO
+> memory[/yxxx] 		= ENDEREÇO DE RETORNO
 memory[/yxxx + 2]	= PRIMEIRA INSTRUÇÃO DA SUBROTINA	  
