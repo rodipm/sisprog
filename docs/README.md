@@ -861,9 +861,9 @@ Analiza linha por linha em busca de labels, listando-os. A cada linha analizada 
 * PASSO 2:
 O segundo passo é responsável por gerar 3 tipos de arquivos:
 
-* Arquivo de listagem: Apresenta o formato:
-> ADDRES OBJECT LINE SOURCE
-(OBJECT é o código de máquina hexadecimal com os endereços já resolvidos)
+	* Arquivo de listagem: Apresenta o formato:
+	> ADDRES OBJECT LINE SOURCE
+	(OBJECT é o código de máquina hexadecimal com os endereços já resolvidos)
 
 * Arquivo de labels: apresenta o formato:
 > LABEL VALUE
