@@ -683,4 +683,10 @@ Efetua desvio incondicional para endereços (/xxx)  dentro do mesmo banco de mem
 
 2. Jump if Zero | /1xxx
 Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador igual a zero.
-> if acc == 0 then ci = /yxxx
+> if acc == 0 then ci = /yxxx; else ci = ci + instructionSize
+
+3. Jummp if Negative | /2xxx
+Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador menor que zero.
+> if acc < 0 then ci = /yxxx; else ci = ci + instructionSize
+
+
