@@ -871,7 +871,7 @@ O segundo passo é responsável por gerar 3 tipos de arquivos:
 
 	* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
 
-Cada linha de código com mnemonicos deve gerar um obj (hexadecimal)
+Cada linha de código com mnemonicos deve gerar um obj (hexadecimal).
 
 Cada linha deve ser analisada da seguinte maneira:
 
