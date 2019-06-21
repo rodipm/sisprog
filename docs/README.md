@@ -677,4 +677,10 @@ Trata-se da arquitetura apresentada em sala de aula (Aula 09), que embora seja u
 
 ### INSTRUÇÕES DE DESVIO ###
 
-1.
+1. Jump Unconditional | /0xxx
+Efetua desvio incondicional para endereços (/xxx)  dentro do mesmo banco de memória (/y).
+> ci = /yxxx
+
+2.Jump if Zero | /1xxx
+Efetua desvio para endereços (/xxx) dentro do mesmo banco de memória (/y) se acumulador igual a zero.
+> if acc == 0 then ci = /yxxx
