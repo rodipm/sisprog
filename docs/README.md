@@ -644,28 +644,28 @@ void IO() {
 				_acc = (int8_t)buff[0];
 			}
 			else {
-				cout << "TRYING TO GET DATA FROM UNKNOWN FILE" << endl;
-				exit(1);
-			}
+			cout << "TRYING TO GET DATA FROM UNKNOWN FILE" << endl;
+			exit(1);
 		}
 	}
 }
+}
 ```
 Instrução e Input Output, OPcode 0xC, controla as operações de input e output, de forma que pode-se escrever (PUT DATA) e ler (GET DATA) das possiveis fontes. Existem 4 possíveis devices fonte: [1] - Cin / Cout, [2] e [3] - Disponíveis para o programador. A utilização dessa instução é feita seguindo o seguinte formato mnemonico: IO	/od, em que 'o' representa a operação a ser realizada: [0] - Get Data, [1] - Put Data,  [2] - Enable Interrupt, [3] - Disable Interrupt, sendo que as duas últimas não foram implementdas, como citado anteriormente. E 'd' representa um dos possíveis devices.
- 
+
 Para finalizar as funcionalidade da maquina virtual, segue o código que encapsula o dumper, escrito em linguagem assembly (mostrado adiante).
 ```cpp
 // Dumper guarda parte da memória em um arquivo escolhido
 void dump(string file, string client) {
-	stringstream name;
-	name << "./usr/" << client << "/bin/" << file << ".dmp.bin";
-	file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
-	io_devices[1][0] = file_stream->rdbuf();
-	io_devices[1][1] = file_stream->rdbuf();
-	if(DEBUG) cout << "#####RUNNING DUMPER#####" << endl;
-	run(0x50, true);
-	file_stream->close();
-	delete file_stream;
+stringstream name;
+name << "./usr/" << client << "/bin/" << file << ".dmp.bin";
+file_stream = new fstream(name.str(), ios_base::out | ios_base::binary);
+io_devices[1][0] = file_stream->rdbuf();
+io_devices[1][1] = file_stream->rdbuf();
+if(DEBUG) cout << "#####RUNNING DUMPER#####" << endl;
+run(0x50, true);
+file_stream->close();
+delete file_stream;
 }
 ```
 Essa função efetua os links corretos dos buffers de leitura e escrita para serem utilizados pela VM na interpretação do dumper e inicia a execução da VM a partir do endereço 0x50 de memória, que contem o dumper.
@@ -805,32 +805,32 @@ Segue um exemplo de elaboração de código na linguagem assembly adotada:
 
 ```
 INICIO	@	/0100 ;N2 - Calcula o quadrado de um número
-	IO	/01
-	MM	N
-	JZ	END
-	LD	UM
-	MM	ODD
+IO	/01
+MM	N
+JZ	END
+LD	UM
+MM	ODD
 LOOP	MM	RES
-	LD	N
-	-	UM
-	MM	N
-	JZ	END
-	LD	ODD
-	+	DOIS
-	MM	ODD
-	LD	RES
-	+	ODD
-	MM	RES
-	JP	LOOP
+LD	N
+-	UM
+MM	N
+JZ	END
+LD	ODD
++	DOIS
+MM	ODD
+LD	RES
++	ODD
+MM	RES
+JP	LOOP
 END	LD	RES
-	CN	/00
-	@	/0500	;Dados
+CN	/00
+@	/0500	;Dados
 N	K	/00	;N (a ser calculado N2)
 UM	K	/01
 DOIS	K	/02
 ODD	K	/00
 RES	K	/00
-	#	INICIO
+#	INICIO
 
 ```
 
@@ -852,25 +852,29 @@ O arquivo fonte é lido DUAS VEZES, constituindo dois passos:
 
 * PASSO 1:
 Analiza linha por linha em busca de labels, listando-os. A cada linha analizada deve-se:
-	*Associar labels a seus respectivos endereçcos
-	*Se a linha contiver operandos referenciados por labels, deve-se verificar se o label ja foi listado, caso nao tenha sido
-	 adiciona-o com endereço indefinido;
-	*Atualizar o _ci apropriadamente para cada tipo de instrução.
-PASSO2:
-	O segundo passo é responsável por gerar 3 tipos de arquivos:
-	* Arquivo de listagem: Apresenta o formato:
-	> 	ADDRES	OBJECT	LINE	SOURCE
-	(OBJECT é o código de máquina hexadecimal com os endereços ja resolvidos
 
-	* Arquivo de labels: apresenta o formato:
-		LABEL	VALUE
+*Associar labels a seus respectivos endereçcos
+*Se a linha contiver operandos referenciados por labels, deve-se verificar se o label ja foi listado, caso nao tenha sido
+ adiciona-o com endereço indefinido;
+*Atualizar o _ci apropriadamente para cada tipo de instrução.
 
-	* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
+* PASSO 2:
+O segundo passo é responsável por gerar 3 tipos de arquivos:
 
-	Cada linha de código com mnemonicos deve gerar um obj (hexadecimal)
+* Arquivo de listagem: Apresenta o formato:
+> ADDRES OBJECT LINE SOURCE
+(OBJECT é o código de máquina hexadecimal com os endereços já resolvidos)
 
-	Cada linha deve ser analisada da seguinte maneira:
-		*Se for apenas uma linha de comentário ou de label: apenas lita-la
-		*Se contem mnemonico: Obter op
-		*Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
+* Arquivo de labels: apresenta o formato:
+> LABEL VALUE
+
+* Arquivo objeto: contem o codigo de maquina equivalente ao código montado
+
+Cada linha de código com mnemonicos deve gerar um obj (hexadecimal)
+
+Cada linha deve ser analisada da seguinte maneira:
+
+*Se for apenas uma linha de comentário ou de label: apenas lita-la
+*Se contem mnemonico: Obter op
+*Se contem operando: Se for label -> resolve e gera o obj. Se for endereo -> gera o obj
 
