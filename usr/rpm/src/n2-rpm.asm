@@ -1,5 +1,5 @@
 INICIO	@	/0100 ;N2 - Calcula o quadrado de um número
-	OS	/01	;Habilita trace mode
+	OS	/00	;Habilita trace mode
 	IO	/01
 	MM	N
 	JZ	END

@@ -158,8 +158,6 @@ public:
 			}
 
 		}
-		else
-			cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;			
 	}
 		
 	
@@ -204,6 +202,7 @@ public:
 		switch((_ri & 0x0f00) >> 8) {
 			case 0x0: // HLT
 				cout << "Machine is halted" << endl;
+				cout << "Acumulador       :" << " | _acc: " << dec << (int16_t)_acc << endl;
 				running = false;
 				break;
 			case 0x1: // RI

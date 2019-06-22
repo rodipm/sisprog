@@ -194,7 +194,7 @@ void checkDirs() {
 }
 
 int main (int argc, char **argv) {
-	//welcome();
+	welcome();
 	while (!login()) {
 		cout << endl << "Usuário ou senha incorretos!" << endl << endl;
 	}	

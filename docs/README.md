@@ -1262,3 +1262,176 @@ START2	K	/00
 SUM	K	/00
 	#	INIT
 ```
+
+Nota-se que o programa espera um Input de tres bytes, sendo eles: primeiro e segundos bytes do endereço a partir do qual o Dumper deve começar a atuar e terceiro byte sendo a quantidades de dados a serem descarregados.
+
+### VALOR QUADRADO ###
+
+```
+INICIO	@	/0300 	;N2 - Calcula o quadrado de um número
+	OS	/01	;Habilita trace mode
+	IO	/01	;Efetua a leitura de um byte
+	MM	N
+	JZ	END
+	LD	UM
+	MM	ODD
+LOOP	MM	RES
+	LD	N
+	-	UM
+	MM	N
+	JZ	END
+	LD	ODD
+	+	UM[1]
+	MM	ODD
+	LD	RES
+	+	ODD
+	MM	RES
+	JP	LOOP
+END	LD	RES
+	IO	/00	;Desabilita trace mode
+	CN	/00
+	@	/0500	;Dados
+N	K	/00	;N (a ser calculado N2)
+UM	K	/01
+DOIS	K	/02
+ODD	K	/00
+RES	K	/00
+	#	INICIO
+
+```
+
+## Testes e Resultados ##
+
+### DEMONSTRAÇÃO FUNCIONAMENTO DE FLUXO DE EXECUÇÃO CLI ###
+
+1. Boas Vindas e Login:
+```
+  ____  _     ____
+ / ___|(_)___|  _ \ _ __ ___   __ _
+ \___ \| / __| |_) | '__/ _ \ / _` |
+  ___) | \__ \  __/| | | (_) | (_| |
+ |____/|_|___/_|   |_|  \___/ \__, |
+                              |___/
+
+Rodrigo Perrucci Macharelli
+
+User: rpm
+Senha: rpm
+```
+
+2. Tela Inicial e Menu de Ajuda:
+```
+Digite $HELP para obter os comandos disponíveis.
+
+rpm@SisProg$ 
+```
+
+Ao digitar o comando $HELP, como sugerido, temos:
+```
+rpm@SisProg$ $HELP
+
+Comandos disponíveis: 
+$HELP
+	Apresenta este diálogo
+$DIR
+	Exibe lista de programas do usuário atual
+$DEL <nome>
+	Remove do sistema de programação o acesso ao programa especificado
+$RUN <nome>
+	Inicializa a maquina virtual e executa o programa especificado
+$DUMP <nome>
+	Executa o programa Dumper
+$END
+	Finaliza a operação do CLI e deleta os arquivos necessários na máquina hospedeira
+
+```
+
+3. Exemplo Funcionamento Dir
+
+```
+rpm@SisProg$ $DIR
+
+
+0. n2-array.asm
+1. n2-rpm.asm
+2. test-trace.asm
+3. test.asm
+```
+
+4. Exemplo $RUN 
+
+Para exemplificar o funcionamento do comando $RUN utiliza-se o programa n2-rpm.asm, localizado dentro da pasta de usuário 'rpm'.
+
+```
+Digite $HELP para obter os comandos disponíveis.
+
+rpm@SisProg$ $RUN n2-rpm.asm
+
+Machine is halted
+Acumulador       : | _acc: 0
+Machine is halted
+Acumulador       : | _acc: 0
+Input: 07
+Machine is halted
+Acumulador       : | _acc: 49
+```
+Há algumas observações importantes sobre esse resultado. A primeira é o funcionamento correto da máquina, obtendo o valor 49 no acumulador ao final de sua execução para o input (digitado via terminal) 0x07. Nota-se também que a máquina para três vezes. Isso evidencia o funcionamento da máquina virtual (exposto no primeiro capítulo) executando a montagem e load do 'loader.asm' e 'n2-rpm.asm'.
+
+5. Exemplo $DEL
+
+Os resultados abaixo mostram o funcionamento do comando DEL, que remove um programa da lista de programas executáveis. Neste exemplo deleta-se o programa 'test.asm'.
+
+```
+rpm@SisProg$ $DIR
+
+
+0. n2-array.asm
+1. n2-rpm.asm
+2. test-trace.asm
+3. test.asm
+
+
+rpm@SisProg$ $DEL test.asm
+rpm@SisProg$ $DIR
+
+
+0. n2-array.asm
+1. n2-rpm.asm
+2. test-trace.asm
+
+
+rpm@SisProg$ $RUN test.asm
+Programa não encontrado
+```
+
+6. Exemplo $DUMP
+
+O programa dumper pode ser acessado via CLI, que passa a execução à máquina virtual. O seu funcionamento espera o endereço inicial a ser lido em dois bytes de input. Em seguida pede a quantidade de dados em byte que dever ser despejados da memória. A máquina virtual então executa o dumper e o arquivo 'nome.dmp.bin' é gerado.
+Observando o arquivo '.o' gerado na pasta `./usr/rpm/bin` contém a seguinte informação:
+
+```
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ cat n2-rpm0.o
+01 00 26
+b0 c1 95 00 11 22 85 01 
+95 03 95 04 85 00 55 01 
+95 00 11 22 85 03 45 02 
+95 03 85 04 45 03 95 04 
+01 0a 85 04 c0 30 
+
+f1
+```
+
+Note que os três primeiros bytes são justamente os inputs que devemos inserir no programa dumper para obter o dump dessa região da memória na qual o programa n2-rpm.asm está alocado por ter sido rodado nos exemplos anteriores.
+
+```
+rpm@SisProg$ $DUMP dump-test
+
+Machine is halted
+Acumulador       : | _acc: 0
+Input: 01
+Input: 00
+Input: 26
+Machine is halted
+Acumulador       : | _acc: -15
+
+```

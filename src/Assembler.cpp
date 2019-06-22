@@ -438,7 +438,6 @@ public:
 			cout << list[i] << endl;
 		}
 		
-		cout << "BREAKS HERE? Right??" << endl;
 		return assembled(file_number, begin_addr, file_name);
 
 	}
