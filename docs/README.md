@@ -1472,3 +1472,120 @@ rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$
 ```
 
 Note que os arquivos referentes ao program test.asm foram deletados da máquina hospedeira ao fim da execução do CLI.
+
+## PROGRAMAS ESCRITOS EM LINGUAGEM SIMBÓLICA ##
+
+### LOADER ###
+
+1. Código Fonte
+
+```
+
+```
+
+2. Listagem e Labels gerado pelo Assembler
+
+```
+LABELS	VALUE
+==========================
+CHECK	/0032
+END	/003a
+IADDR	/003c
+IADDR2	/003d
+INIT	/0001
+LOOP	/001a
+ONE	/003f
+SIZE	/003e
+START	/0040
+START2	/0041
+SUM	/0042
+
+ADDRES	OBJECT	LINE	SOURCE	
+		1		@	/0001	;Endereço inicial do loader
+
+0001	c2	2	INIT	IO	/02	;GET DATA - Device 2 (file)
+
+0002	903c	3		MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+
+0004	9040	4		MM	START	;Salva novamente para termos o endereço ao final
+
+0006	4042	5		+	SUM	;Soma o byte para checksum
+
+0008	9042	6		MM	SUM	
+
+000a	c2	7		IO	/02	;GET DATA
+
+000b	903d	8		MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+
+000d	9041	9		MM	START2	
+
+000f	4042	10		+	SUM	;Soma o byte para checksum
+
+0011	9042	11		MM	SUM	
+
+0013	c2	12		IO	/02	;GET DATA
+
+0014	903e	13		MM	SIZE	;Salva o tamanho do programa (em bytes)
+
+0016	4042	14		+	SUM	;Soma o byte para checksum
+
+0018	9042	15		MM	SUM	
+
+001a	c2	16	LOOP	IO	/02	;GET DATA
+
+001b	32	17		CN	/02	;Ativa modo indireto
+
+001c	903c	18		MM	IADDR	;Guarda (indiretamente) o byte lido no endereço atual 
+
+001e	4042	19		+	SUM	;Soma o byte para checksum
+
+0020	9042	20		MM	SUM	
+
+0022	803d	21		LD	IADDR2	;Carrega o endereço atual
+
+0024	403f	22		+	ONE	;Atualiza (soma 1)
+
+0026	903d	23		MM	IADDR2	;Salva
+
+0028	803e	24		LD	SIZE	;Carrega o tamanho atual
+
+002a	503f	25		-	ONE	;Atualiza (subtrai 1)
+
+002c	903e	26		MM	SIZE	;Salva
+
+002e	1032	27		JZ	CHECK	;Se SIZE = 0 pula para o checksum
+
+0030	1a	28		JP	LOOP	;Caso contrario, continua lendo
+
+0032	c2	29	CHECK	IO	/02	;GET DATA
+
+0033	4042	30		+	SUM	;Soma o byte de checksum ao valor da soma atual
+
+0035	9042	31		MM	SUM	
+
+0037	103a	32		JZ	END	;Se SUM = 0 finaliza
+
+0039	30	33		CN	/00	;Caso contraio HALT MACHINE
+
+003a	32	34	END	CN	/02	;Ativa modo indireto
+
+		35	;JP START ;Salta para o inicio do programa carregado
+
+003b	30	36		CN	/00	;Halt Machine
+
+003c	0	37	IADDR	K	/00	
+
+003c	0	38	IADDR2	K	/00	
+
+003c	0	39	SIZE	K	/00	
+
+003c	1	40	ONE	K	/01	
+
+003c	0	41	START	K	/00	
+
+003c	0	42	START2	K	/00	
+
+003c	0	43	SUM	K	/00	
+
+		44		#	INIT
+```
