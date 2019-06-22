@@ -1,28 +1,12 @@
-	;N2 - Calcula o quadrado de um número
-INICIO	@	/0100
-	IO	/01
-	MM	N
-	JZ	END
-	LD	UM
-	MM	ODD
-LOOP	MM	RES
-	LD	N
-	-	UM
-	MM	N
-	JZ	END
-	LD	ODD
-	+	DOIS
-	MM	ODD
-	LD	RES
-	+	ODD
-	MM	RES
-	JP	LOOP
-END	LD	RES
-	CN	/00
-	@	/0500	;Dados
-N	K	/00	;N (a ser calculado N2)
-UM	K	/01
-DOIS	K	/02
-ODD	K	/00
-RES	K	/00
+INICIO	@	/2100	;Programa simples para demonstrar o trace
+	OS	/01	;Enable Trace
+	+	NUMS[0]
+	+	NUMS[1]
+	+	NUMS[2]
+	OS	/00	;Disable Trace
+	CN	/00	;HALT
+	@	/21AA	;Dados
+NUMS	K	/00
+NUMS1	K	/01
+NUMS2	K	/02
 	#	INICIO

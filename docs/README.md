@@ -1480,6 +1480,50 @@ Note que os arquivos referentes ao program test.asm foram deletados da máquina 
 1. Código Fonte
 
 ```
+	@	/0001	;Endereço inicial do loader
+INIT	IO	/02	;GET DATA - Device 2 (file)
+	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+	MM	START	;Salva novamente para termos o endereço ao final
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/02	;GET DATA
+	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+	MM	START2
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/02	;GET DATA
+	MM	SIZE	;Salva o tamanho do programa (em bytes)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+LOOP	IO	/02	;GET DATA
+	CN	/02	;Ativa modo indireto
+	MM	IADDR	;Guarda (indiretamente) o byte lido no endereço atual 
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	LD	IADDR2	;Carrega o endereço atual
+	+	ONE	;Atualiza (soma 1)
+	MM	IADDR2	;Salva
+	LD	SIZE	;Carrega o tamanho atual
+	-	ONE	;Atualiza (subtrai 1)
+	MM	SIZE	;Salva
+	JZ	CHECK	;Se SIZE = 0 pula para o checksum
+	JP	LOOP	;Caso contrario, continua lendo
+CHECK	IO	/02	;GET DATA
+	+	SUM	;Soma o byte de checksum ao valor da soma atual
+	MM	SUM
+	JZ	END	;Se SUM = 0 finaliza
+	CN	/00	;Caso contraio HALT MACHINE
+END	CN	/02	;Ativa modo indireto
+			;JP	START	;Salta para o inicio do programa carregado
+	CN	/00	;Halt Machine
+IADDR	K	/00
+IADDR2	K	/00
+SIZE	K	/00
+ONE	K	/01
+START	K	/00
+START2	K	/00
+SUM	K	/00
+	#	INIT
 
 ```
 
@@ -1589,3 +1633,310 @@ ADDRES	OBJECT	LINE	SOURCE
 
 		44		#	INIT
 ```
+
+### DUMPER ###
+
+1. Código Fonte
+
+```
+	@	/0050	;Endereço inicial do dumper 
+INIT	IO	/01	;GET DATA - Device 1 (stdin) - Primeiro Byte
+	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/01	;GET DATA - Device 1 (stdin) - Segundo Byte
+	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/01	;GET DATA - Device 1 (stdin) - Tamanho do programa
+	MM	SIZE	;Salva o tamanho do programa (em bytes)
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+LOOP	CN	/02	;Ativa modo indireto
+	LD	IADDR	;Carrega (indiretamente) o byte lido do endereço atual 
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	LD	IADDR2	;Carrega o endereço atual
+	+	ONE	;Atualiza (soma 1)
+	MM	IADDR2	;Salva
+	LD	SIZE	;Carrega o tamanho atual
+	-	ONE	;Atualiza (subtrai 1)
+	MM	SIZE	;Salva
+	JZ	CHECK	;Se SIZE = 0 pula para o checksum
+	JP	LOOP	;Caso contrario, continua lendo
+CHECK	LD	COMP	;Carrega FF no acumulador
+	-	SUM	;Efetua FF - SUM
+	+	ONE	;Soma um
+	IO	/06	;PUT DATA - Device 2 (file)
+	CN	/00	;Halt Machine
+IADDR	K	/00
+IADDR2	K	/00
+SIZE	K	/00
+ONE	K	/01
+COMP	K	/FF
+START	K	/00
+START2	K	/00
+SUM	K	/00
+	#	INIT
+```
+
+2. Listagem e Labels gerado pelo Assembler
+
+```
+LABELS	VALUE
+==========================
+CHECK	/0080
+COMP	/008c
+IADDR	/0088
+IADDR2	/0089
+INIT	/0050
+LOOP	/0068
+ONE	/008b
+SIZE	/008a
+START	/008d
+START2	/008e
+SUM	/008f
+
+ADDRES	OBJECT	LINE	SOURCE	
+		1		@	/0050	;Endereço inicial do dumper 
+
+0050	c1	2	INIT	IO	/01	;GET DATA - Device 1 (stdin) - Primeiro Byte
+
+0051	9088	3		MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+
+0053	c6	4		IO	/06	;PUT DATA - Device 2 (file)
+
+0054	408f	5		+	SUM	;Soma o byte para checksum
+
+0056	908f	6		MM	SUM	
+
+0058	c1	7		IO	/01	;GET DATA - Device 1 (stdin) - Segundo Byte
+
+0059	9089	8		MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+
+005b	c6	9		IO	/06	;PUT DATA - Device 2 (file)
+
+005c	408f	10		+	SUM	;Soma o byte para checksum
+
+005e	908f	11		MM	SUM	
+
+0060	c1	12		IO	/01	;GET DATA - Device 1 (stdin) - Tamanho do programa
+
+0061	908a	13		MM	SIZE	;Salva o tamanho do programa (em bytes)
+
+0063	c6	14		IO	/06	;PUT DATA - Device 2 (file)
+
+0064	408f	15		+	SUM	;Soma o byte para checksum
+
+0066	908f	16		MM	SUM	
+
+0068	32	17	LOOP	CN	/02	;Ativa modo indireto
+
+0069	8088	18		LD	IADDR	;Carrega (indiretamente) o byte lido do endereço atual 
+
+006b	c6	19		IO	/06	;PUT DATA - Device 2 (file)
+
+006c	408f	20		+	SUM	;Soma o byte para checksum
+
+006e	908f	21		MM	SUM	
+
+0070	8089	22		LD	IADDR2	;Carrega o endereço atual
+
+0072	408b	23		+	ONE	;Atualiza (soma 1)
+
+0074	9089	24		MM	IADDR2	;Salva
+
+0076	808a	25		LD	SIZE	;Carrega o tamanho atual
+
+0078	508b	26		-	ONE	;Atualiza (subtrai 1)
+
+007a	908a	27		MM	SIZE	;Salva
+
+007c	1080	28		JZ	CHECK	;Se SIZE = 0 pula para o checksum
+
+007e	68	29		JP	LOOP	;Caso contrario, continua lendo
+
+0080	808c	30	CHECK	LD	COMP	;Carrega FF no acumulador
+
+0082	508f	31		-	SUM	;Efetua FF - SUM
+
+0084	408b	32		+	ONE	;Soma um
+
+0086	c6	33		IO	/06	;PUT DATA - Device 2 (file)
+
+0087	30	34		CN	/00	;Halt Machine
+
+0088	0	35	IADDR	K	/00	
+
+0088	0	36	IADDR2	K	/00	
+
+0088	0	37	SIZE	K	/00	
+
+0088	1	38	ONE	K	/01	
+
+0088	ff	39	COMP	K	/FF	
+
+0088	0	40	START	K	/00	
+
+0088	0	41	START2	K	/00	
+
+0088	0	42	SUM	K	/00	
+
+		43		#	INIT	
+```
+
+### FUNCIONAMENTO TRACE ###
+
+Para exemplificar o funcionamento do modo trace de execução da máquina virtual foi feito o seguinte programa simples em linguagem simbólica
+
+```
+INICIO	@	/2100	;Programa simples para demonstrar o trace
+	OS	/01	;Enable Trace
+	+	NUMS[0]
+	+	NUMS[1]
+	+	NUMS[2]
+	OS	/00	;Disable Trace
+	CN	/00	;HALT
+	@	/21AA	;Dados
+NUMS	K	/00
+NUMS1	K	/01
+NUMS2	K	/02
+	#	INICIO
+```
+
+Executando o programa temos o seguinte output:
+
+```
+Machine is halted
+Acumulador       : | _acc: 0
+Machine is halted
+Acumulador       : | _acc: 0
+[194:
+Registradores    : | _ci: 100 | _cb: 2 | _ri: b100
+Estado da Maquina: | IN : 0 | HA: 0
+Acumulador       : | _acc: 0
+]
+
+##########MEM MAP##########
+    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 
+
+00  b1 41 aa 41 ab 41 ac b0 30 00 00 00 00 00 00 00 
+01  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+02  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+03  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+04  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+05  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+06  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+07  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+09  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0a  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0b  00 00 00 00 00 00 01 02 00 00 00 00 00 00 00 00 
+0c  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0d  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0e  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0f  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[c3:
+Registradores    : | _ci: 101 | _cb: 2 | _ri: 41aa
+Estado da Maquina: | IN : 0 | HA: 0
+Acumulador       : | _acc: 0
+]
+
+##########MEM MAP##########
+    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 
+
+00  b1 41 aa 41 ab 41 ac b0 30 00 00 00 00 00 00 00 
+01  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+02  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+03  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+04  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+05  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+06  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+07  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+09  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0a  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0b  00 00 00 00 00 00 01 02 00 00 00 00 00 00 00 00 
+0c  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0d  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0e  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0f  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[c4:
+Registradores    : | _ci: 103 | _cb: 2 | _ri: 41ab
+Estado da Maquina: | IN : 0 | HA: 0
+Acumulador       : | _acc: 1
+]
+
+##########MEM MAP##########
+    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 
+
+00  b1 41 aa 41 ab 41 ac b0 30 00 00 00 00 00 00 00 
+01  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+02  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+03  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+04  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+05  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+06  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+07  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+09  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0a  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0b  00 00 00 00 00 00 01 02 00 00 00 00 00 00 00 00 
+0c  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0d  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0e  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0f  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[c5:
+Registradores    : | _ci: 105 | _cb: 2 | _ri: 41ac
+Estado da Maquina: | IN : 0 | HA: 0
+Acumulador       : | _acc: 3
+]
+
+##########MEM MAP##########
+    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 
+
+00  b1 41 aa 41 ab 41 ac b0 30 00 00 00 00 00 00 00 
+01  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+02  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+03  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+04  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+05  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+06  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+07  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+09  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0a  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0b  00 00 00 00 00 00 01 02 00 00 00 00 00 00 00 00 
+0c  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0d  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0e  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0f  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Machine is halted
+Acumulador       : | _acc: 3
+```
+
+Repare que as informações da execução da máquina passa a ser impressa no terminal, mostrando os valores de todos os registradores, estado da máquina (halted ou modo indireto) e o valor do acumulador.
+No mapa de memória temos o programa carregado a partir de 0000 (endereço relativo ao valor inicial do programa), contendo os dados da memória em formato hexadecimal.
+A partir de 0x0b05 temos os três dados carregados com o programa: 0x00, 0x01, 0x02.
+
+## CONSIDERAÇÕES FINAIS ##
+
+### CÓDIGO FONTE E COMPILAÇÃO ###
+
+Todo o código fonte do projeto pode ser encontrado em um repositório do github, cujo link está presente no site do projeto.
+O código pode ser compilado e executado tanto em sistemas Windows quanto em sistemas GNU Linux.
+O arquivo 'compile.sh' pode ser utilizado para compilar o arquivo fonte em sistemas Linux.
+Todo o projeto pode ser compilado utilizando o compilador 'g++', sem necessidade de flags adicionais.
+
+### POSSÍVEIS MELHORIAS ###
+
+A implementação de um conjunto de instruções mais flexível e completo poderia facilitar a programação em baixo nível.
+
+O Assembler pode ser adaptado para lidar com códigos relocáveis, não contemplados neste projeto.
+
+As impementações do sistema de interrupção podem ser efetuadas para a completude do sistema de programação.
+
