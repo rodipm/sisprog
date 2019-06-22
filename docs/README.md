@@ -1128,6 +1128,137 @@ Estes arquivos seguem um formato bem definido de código objeto, sendo que apres
 ### DESCRIÇÃO ###
 
 Para efetuar o controle dos macro componentes do sistema, isto é: Máquina Virtual e Assembler, foi implementado um sistema de interface por linha de comando com sistema de login e possibilitando a separação de áreas de usuário, com seus respectivos programas.
-O cli atua como orquestrador entre o usuário e os sistemas envolvidos, como representa o diagrama a seguir:
+O cli atua como orquestrador entre o usuário e os sistemas envolvidos, fazendo com que a utilização do sistema se torne mais transparente e fácil para o usuário.
 
-![alt text](./imgs/InteracaoCliAssemblerMV.png)
+### LOGIN ###
+
+O sistema apresenta um sistema bastante simples de login, o qual se baseia em um arquivo `passwd` na pasta root do projeto, contendo nome de usuário e senha, que dever ser inseridos ao iniciar o sistema de programação.
+Este nome de usuário é utilizado para separar os ambientes de usuários, de forma que cada usuário tem um sub-diretório dentro do diretório `usr`. Na pasta do usuário encontram-se os diretórios bin/ e src/, sendo que o primeiro recebe os arquivos de saída do Montador e o segundo os códigos fonte dos programas do usuário.
+
+### COMANDOS DA INTERFACE ###
+
+O CLI apresenta os seguintes comandos:
+
+1. $HELP
+
+Exibe menu de ajuda com os comandos disponíveis.
+
+2. $DIR
+
+Exibe os programas fonte disponíveis no diretório do usuário.
+
+3. $DEL <nome>
+
+Remove da listagem de programas disponíveis e marca os arquivos da pasta bin/ associados a <nome> para serem deletados ao final da execução da CLI
+
+4. $RUN <nome>
+
+Executa um programa que esteja disponível na pasta src/, efetuando sua montagem e executando a máquina virtual no endereço necessário.
+
+5. $DUMP <nome>
+
+Executa o programa Dumper e salva os resultados com o nome especificado.
+
+6. $END <nome>
+
+Finaliza a execução do CLI e efetua a remoção dos arquivos marcados para serem deletados. 
+
+## PROGRAMAS ESCRITOS EM LINGUAGEM SIMBÓLICA ##
+
+Para demonstração das funcionalidades da linguagem simbólica e completude do sistema de programação foram codificados alguns programas de sistema e programas para teste.
+
+### LOADER ###
+
+```
+	@	/0001	;Endereço inicial do loader
+INIT	IO	/02	;GET DATA - Device 2 (file)
+	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+	MM	START	;Salva novamente para termos o endereço ao final
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/02	;GET DATA
+	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+	MM	START2
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/02	;GET DATA
+	MM	SIZE	;Salva o tamanho do programa (em bytes)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+LOOP	IO	/02	;GET DATA
+	CN	/02	;Ativa modo indireto
+	MM	IADDR	;Guarda (indiretamente) o byte lido no endereço atual 
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	LD	IADDR2	;Carrega o endereço atual
+	+	ONE	;Atualiza (soma 1)
+	MM	IADDR2	;Salva
+	LD	SIZE	;Carrega o tamanho atual
+	-	ONE	;Atualiza (subtrai 1)
+	MM	SIZE	;Salva
+	JZ	CHECK	;Se SIZE = 0 pula para o checksum
+	JP	LOOP	;Caso contrario, continua lendo
+CHECK	IO	/02	;GET DATA
+	+	SUM	;Soma o byte de checksum ao valor da soma atual
+	MM	SUM
+	JZ	END	;Se SUM = 0 finaliza
+	CN	/00	;Caso contraio HALT MACHINE
+END	CN	/02	;Ativa modo indireto
+			;JP	START	;Salta para o inicio do programa carregado
+	CN	/00	;Halt Machine
+IADDR	K	/00
+IADDR2	K	/00
+SIZE	K	/00
+ONE	K	/01
+START	K	/00
+START2	K	/00
+SUM	K	/00
+	#	INIT
+```
+
+### DUMPER ###
+```
+	@	/0050	;Endereço inicial do dumper 
+INIT	IO	/01	;GET DATA - Device 1 (stdin) - Primeiro Byte
+	MM	IADDR	;Salva primeiro byte do endereço inicial do programa
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/01	;GET DATA - Device 1 (stdin) - Segundo Byte
+	MM	IADDR2	;Salva o segundo byte do endereço inicial do programa
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	IO	/01	;GET DATA - Device 1 (stdin) - Tamanho do programa
+	MM	SIZE	;Salva o tamanho do programa (em bytes)
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+LOOP	CN	/02	;Ativa modo indireto
+	LD	IADDR	;Carrega (indiretamente) o byte lido do endereço atual 
+	IO	/06	;PUT DATA - Device 2 (file)
+	+	SUM	;Soma o byte para checksum
+	MM	SUM
+	LD	IADDR2	;Carrega o endereço atual
+	+	ONE	;Atualiza (soma 1)
+	MM	IADDR2	;Salva
+	LD	SIZE	;Carrega o tamanho atual
+	-	ONE	;Atualiza (subtrai 1)
+	MM	SIZE	;Salva
+	JZ	CHECK	;Se SIZE = 0 pula para o checksum
+	JP	LOOP	;Caso contrario, continua lendo
+CHECK	LD	COMP	;Carrega FF no acumulador
+	-	SUM	;Efetua FF - SUM
+	+	ONE	;Soma um
+	IO	/06	;PUT DATA - Device 2 (file)
+	CN	/00	;Halt Machine
+IADDR	K	/00
+IADDR2	K	/00
+SIZE	K	/00
+ONE	K	/01
+COMP	K	/FF
+START	K	/00
+START2	K	/00
+SUM	K	/00
+	#	INIT
+```

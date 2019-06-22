@@ -1,5 +1,4 @@
-			;N2 - Calcula o quadrado de um número
-INICIO	@	/0100
+INICIO	@	/0100 ;N2 - Calcula o quadrado de um número
 	IO	/01
 	MM	N
 	JZ	END
