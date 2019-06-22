@@ -1443,4 +1443,32 @@ rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$
 ```
 A ausência de respostas indica que os arquivos são iguais.
 
+7. Exemplo $END
 
+O comando END finaliza a execução do CLI e remove os arquivos '.o' e '.bin' associados a todos os programas que tenham sido removidos do sistema pelo comando $DEL.
+
+Veja como se encontra a pasta `./usr/rpm/bin`
+
+```
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ ls | grep test
+test0.bin
+test0.o
+test1.bin
+test1.o
+```
+
+Os arquivos relativos ao programa `test.asm`, que foi removido, ainda se encontram na pasta. Executa-se o comando $END no CLI:
+
+```
+rpm@SisProg$ $END
+rpm@rpm:~/Poli/SisProg/Projetos$
+```
+
+Novamente a pasta `./usr/rpm/bin':
+
+```
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ ls | grep test
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ 
+```
+
+Note que os arquivos referentes ao program test.asm foram deletados da máquina hospedeira ao fim da execução do CLI.
