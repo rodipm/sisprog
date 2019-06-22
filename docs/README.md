@@ -1433,5 +1433,14 @@ Input: 00
 Input: 26
 Machine is halted
 Acumulador       : | _acc: -15
+```
+
+O arquivo dump-test.dmp.bin é gerado na pasta bin. Espera-se que o arquivo binário gerado seja identico ao arquivo 'n2-rpm0.bin', uma vez que fizemos a cópia da memória que contém este programa e o checksum deve ser gerado pelo dumper. Para verificar se são efetivamente identicos utiliza-se o programa `diff` do linux, para comparar os binários:
 
 ```
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ diff n2-rpm0.bin dump-test.dmp.bin
+rpm@rpm:~/Poli/SisProg/Projetos/usr/rpm/bin$ 
+```
+A ausência de respostas indica que os arquivos são iguais.
+
+
