@@ -182,15 +182,15 @@ void checkDirs() {
 	src << base.str() << "/src";
 	stringstream bin;
 	bin << base.str() << "/bin";
-#ifdef _WINDOWS
+// #ifdef _WINDOWS
 	_mkdir(base.str().c_str());
 	_mkdir(src.str().c_str());
 	_mkdir(bin.str().c_str());
-#else
-	mkdir(base.str().c_str(), 0733);
-	mkdir(src.str().c_str(), 0733);
-	mkdir(bin.str().c_str(), 0733);
-#endif
+// #else
+// 	mkdir(base.str().c_str(), 0733);
+// 	mkdir(src.str().c_str(), 0733);
+// 	mkdir(bin.str().c_str(), 0733);
+// #endif
 }
 
 int main (int argc, char **argv) {
