@@ -130,6 +130,8 @@ void DUMP (string name) {
 }
 
 bool interpret (string command) {
+	if (command.length() == 0)
+		run("out.asm");
 	if (command.compare("$HELP") == 0)
 		help();
 	else if (command.find("$RUN") != string::npos)
@@ -194,10 +196,11 @@ void checkDirs() {
 }
 
 int main (int argc, char **argv) {
-	welcome();
-	while (!login()) {
-		cout << endl << "Usuário ou senha incorretos!" << endl << endl;
-	}	
+	// welcome();
+	// while (!login()) {
+	// 	cout << endl << "Usuário ou senha incorretos!" << endl << endl;
+	// }
+	client = "rpm";
 	checkDirs();
 	dir(); // Inicia lista de programas
 	
