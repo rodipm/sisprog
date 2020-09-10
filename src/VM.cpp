@@ -264,6 +264,8 @@ public:
 	// Instrução DIVIDE 0x7XXX
 	void divide() {
 		if (!indirect) {
+			cout << hex << (uint16_t)_acc << endl;
+			cout << (int64_t)mem[_cb][_ri & 0x0fff] << endl;
 			_acc /= (int8_t)mem[_cb][_ri & 0x0fff];
 		}	
 		else {
